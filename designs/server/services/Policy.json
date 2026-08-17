@@ -1,0 +1,206 @@
+[
+    {
+        "id": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "type": "tab",
+        "createdDate": "2026-08-12T07:26:59.743Z",
+        "label": "Policy",
+        "disabled": false,
+        "info": "",
+        "functionSeq": 0,
+        "generateNext": true,
+        "serviceName": "Policy",
+        "relativeParentPath": ""
+    },
+    {
+        "id": "sd_5XgzqT10WBwdFsym",
+        "type": "HttpIn",
+        "z": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "viewType": "server",
+        "nodeType": "start",
+        "name": "getPolicyBySearch",
+        "path": "/policies/search",
+        "uploadpath": "",
+        "summary": "",
+        "description": "",
+        "method": "get",
+        "sequenceId": "IDSAuthroizedAPIs",
+        "consumes": "",
+        "produces": "",
+        "filetype": "path",
+        "acceptFileUpload": false,
+        "useDataModel": false,
+        "dataModelIsArray": false,
+        "erd": "",
+        "erdName": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "responses": [],
+            "params": [],
+            "produces": [],
+            "consumes": []
+        },
+        "inputs": 0,
+        "outputs": 1,
+        "validateRequestUsingSwaggerDocs": false,
+        "category": "HTTP",
+        "x": 65,
+        "y": 100,
+        "wires": [
+            [
+                "sd_Q0b2nV8IRKZYktWZ"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "uploadpath": {
+                "type": "str",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Policy",
+        "functionName": "sd_5XgzqT10WBwdFsym"
+    },
+    {
+        "id": "sd_Q0b2nV8IRKZYktWZ",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "policySearchValidateRequest",
+        "script": "const searchType = bh.input.query?.searchType;\nconst searchValue = bh.input.query?.searchValue;\n\nbh.local.sqlParams = [];\n\nif (!searchType && !searchValue) {\n\n    bh.local.sql = `\n        SELECT \n            id,\n            policy_number,\n            customer_id,\n            policy_status,\n            policy_start_date,\n            policy_end_date,\n            insured_name,\n            vehicle_registration,\n            vehicle_make,\n            vehicle_model,\n            vehicle_year,\n            coverage_type,\n            covered_perils,\n            excess_amount,\n            sum_insured,\n            currency\n        FROM policy_master\n        ORDER BY id\n    `;\n\n}\nelse if (searchType && searchValue) {\n\n    const columnMap = {\n        POLICY_NUMBER: \"policy_number\",\n        REGISTRATION_NUMBER: \"vehicle_registration\",\n        CUSTOMER_ID: \"customer_id\"\n    };\n\n    const column = columnMap[searchType];\n\n    if (!column) {\n        throw new Error(\n            \"Invalid searchType. Use POLICY_NUMBER, REGISTRATION_NUMBER, or CUSTOMER_ID.\"\n        );\n    }\n\n    bh.local.sql = `\n        SELECT \n            id,\n            policy_number,\n            customer_id,\n            policy_status,\n            policy_start_date,\n            policy_end_date,\n            insured_name,\n            vehicle_registration,\n            vehicle_make,\n            vehicle_model,\n            vehicle_year,\n            coverage_type,\n            covered_perils,\n            excess_amount,\n            sum_insured,\n            currency\n        FROM policy_master\n        WHERE ${column} = $1\n        ORDER BY id\n    `;\n\n    bh.local.sqlParams = [searchValue];\n\n}\nelse {\n\n    throw new Error(\n        \"searchType and searchValue must be provided together.\"\n    );\n}",
+        "functionName": "policySearchValidateRequest",
+        "category": "Function",
+        "x": 205,
+        "y": 100,
+        "wires": [
+            [
+                "sd_FvvoYk4sBs2Pmryv"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Policy",
+        "generated": true
+    },
+    {
+        "id": "sd_YGLD9RVsYkFtpaX2",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "Policy Search Out",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "num",
+            "value": 200,
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": 200,
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "policySearchOut",
+        "category": "HTTP",
+        "x": 625,
+        "y": 100,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Policy",
+        "generated": true
+    },
+    {
+        "id": "sd_FvvoYk4sBs2Pmryv",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "policySearchSql",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "policyResult"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "sql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "sqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "policySearchSql",
+        "category": "Storage",
+        "x": 345,
+        "y": 100,
+        "wires": [
+            [
+                "sd_TPPEiWcDbSeNEZ6y"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Policy",
+        "generated": true
+    },
+    {
+        "id": "sd_TPPEiWcDbSeNEZ6y",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_Fsla18Y64Y7RqBdK",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "policySearchResponse",
+        "script": "const rows = bh.local.policyResult || [];\n\nbh.local.response = {\n    success: true,\n    count: rows.length,\n    policies: rows.map(row => ({\n        id: Number(row.id),\n        policyNumber: row.policy_number,\n        customerId: row.customer_id,\n        policyStatus: row.policy_status,\n        policyStartDate: row.policy_start_date,\n        policyEndDate: row.policy_end_date,\n        insuredName: row.insured_name,\n        vehicleRegistration: row.vehicle_registration,\n        vehicleMake: row.vehicle_make,\n        vehicleModel: row.vehicle_model,\n        vehicleYear: row.vehicle_year,\n        coverageType: row.coverage_type,\n        coveredPerils: row.covered_perils,\n        excessAmount: Number(row.excess_amount),\n        sumInsured: Number(row.sum_insured),\n        currency: row.currency\n    }))\n};\n",
+        "functionName": "policySearchResponse",
+        "category": "Function",
+        "x": 485,
+        "y": 100,
+        "wires": [
+            [
+                "sd_YGLD9RVsYkFtpaX2"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Policy",
+        "generated": true
+    }
+]

@@ -1,0 +1,1728 @@
+[
+    {
+        "id": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "type": "tab",
+        "createdDate": "2026-08-12T09:18:30.724Z",
+        "label": "Claim",
+        "disabled": false,
+        "info": "",
+        "functionSeq": 0,
+        "generateNext": true,
+        "serviceName": "Claim",
+        "relativeParentPath": ""
+    },
+    {
+        "id": "sd_8aHK2gb3vy0gnYQB",
+        "type": "HttpIn",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "start",
+        "name": "getClaimById",
+        "path": "/claims/:claimId",
+        "uploadpath": "",
+        "summary": "",
+        "description": "",
+        "method": "get",
+        "sequenceId": "IDSAuthroizedAPIs",
+        "consumes": "",
+        "produces": "",
+        "filetype": "path",
+        "acceptFileUpload": false,
+        "useDataModel": false,
+        "dataModelIsArray": false,
+        "uploadFileOptions": "",
+        "erd": "",
+        "erdName": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "responses": [],
+            "params": [],
+            "produces": [],
+            "consumes": []
+        },
+        "inputs": 0,
+        "outputs": 1,
+        "validateRequestUsingSwaggerDocs": false,
+        "category": "HTTP",
+        "x": 405,
+        "y": 500,
+        "wires": [
+            [
+                "sd_3n8aBlsrKvXmNyhr"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "uploadpath": {
+                "type": "str",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Claim",
+        "functionName": "sd_8aHK2gb3vy0gnYQB"
+    },
+    {
+        "id": "sd_3n8aBlsrKvXmNyhr",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "prepareClaimLookup",
+        "script": "const claimId = bh.input.params?.claimId;\n\nif (!claimId) {\n    bh.local.isValid = false;\n    bh.local.responseStatus = 400;\n\n    bh.local.response = {\n        success: false,\n        message: \"claimId is required\"\n    };\n\n}else{\n\n    bh.local.isValid = true;\n    bh.local.claimId = claimId;\n\n    bh.local.claimSql = `\n        SELECT\n            c.id,\n            c.claim_number,\n            c.policy_id,\n            c.claimant_type,\n            c.loss_date_time,\n            c.loss_location,\n            c.loss_type,\n            c.loss_description,\n            c.driver_name,\n            c.driver_licence_status,\n            c.police_report_available,\n            c.police_report_reference,\n            c.estimated_loss_amount,\n            c.currency,\n            c.vehicle_drivable,\n            c.third_party_involved,\n            c.injury_involved,\n            c.preferred_contact_method,\n            c.preferred_contact_value,\n            c.status,\n            c.created_by,\n            c.created_at,\n            c.updated_at,\n\n            p.policy_number,\n            p.customer_id,\n            p.policy_status,\n            p.policy_start_date,\n            p.policy_end_date,\n            p.insured_name,\n            p.vehicle_registration,\n            p.vehicle_make,\n            p.vehicle_model,\n            p.vehicle_year,\n            p.coverage_type,\n            p.covered_perils,\n            p.excess_amount,\n            p.sum_insured\n\n        FROM claims c\n\n        INNER JOIN policy_master p\n            ON p.id = c.policy_id\n\n        WHERE c.id = $1\n\n        LIMIT 1\n    `;\n\n    bh.local.claimSqlParams = [\n        claimId\n    ];\n}",
+        "functionName": "prepareClaimLookup",
+        "category": "Function",
+        "x": 545,
+        "y": 500,
+        "wires": [
+            [
+                "sd_OuNgMwEugkC6hVv0"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_UlEe00O7eQRXHwhJ",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "Claim lookup Out",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "claimLookupOut",
+        "category": "HTTP",
+        "x": 1465,
+        "y": 500,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_wcRjikbUDR3TEio0",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "getClaimSql",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "claimResult"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "claimSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "claimSqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "getClaimSql",
+        "category": "Storage",
+        "x": 865,
+        "y": 500,
+        "wires": [
+            [
+                "sd_w8iAkzwSCITmtUCM"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_w8iAkzwSCITmtUCM",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "validateClaimResult",
+        "script": "const result = bh.local.claimResult || [];\n\nif (!Array.isArray(result) || result.length === 0) {\n\n    bh.local.claimFound = false;\n\n    bh.local.responseStatus = 404;\n\n    bh.local.response = {\n        success: false,\n        message: \"Claim not found\",\n        claimId: bh.local.claimId\n    };\n\n}\nelse {\nconst data = result[0];\n\nbh.local.claimFound = true;\n\nbh.local.claim = {\n    id: Number(data.id),\n    claimNumber: data.claim_number,\n    policyId: Number(data.policy_id),\n    claimantType: data.claimant_type,\n    lossDateTime: data.loss_date_time,\n    lossLocation: data.loss_location,\n    lossType: data.loss_type,\n    lossDescription: data.loss_description,\n    driverName: data.driver_name,\n    driverLicenceStatus: data.driver_licence_status,\n    policeReportAvailable: data.police_report_available,\n    policeReportReference: data.police_report_reference,\n    estimatedLossAmount: data.estimated_loss_amount,\n    currency: data.currency,\n    vehicleDrivable: data.vehicle_drivable,\n    thirdPartyInvolved: data.third_party_involved,\n    injuryInvolved: data.injury_involved,\n    preferredContactMethod: data.preferred_contact_method,\n    preferredContactValue: data.preferred_contact_value,\n    status: data.status,\n    createdBy: data.created_by,\n    createdAt: data.created_at,\n    updatedAt: data.updated_at\n};\n\nbh.local.policy = {\n    id: Number(data.policy_id),\n    policyNumber: data.policy_number,\n    customerId: data.customer_id,\n    policyStatus: data.policy_status,\n    policyStartDate: data.policy_start_date,\n    policyEndDate: data.policy_end_date,\n    insuredName: data.insured_name,\n    vehicleRegistration: data.vehicle_registration,\n    vehicleMake: data.vehicle_make,\n    vehicleModel: data.vehicle_model,\n    vehicleYear: data.vehicle_year,\n    coverageType: data.coverage_type,\n    coveredPerils: data.covered_perils,\n    excessAmount: data.excess_amount,\n    sumInsured: data.sum_insured\n};\n\n}",
+        "functionName": "validateClaimResult",
+        "category": "Function",
+        "x": 1005,
+        "y": 500,
+        "wires": [
+            [
+                "sd_eHmTgVvZMigHV2Cc"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_OuNgMwEugkC6hVv0",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "ClaimiIdValidorNot",
+        "property": "isValid",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.isValid",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "claimiIdValidorNot",
+        "category": "Function",
+        "x": 705,
+        "y": 500,
+        "wires": [
+            [
+                "sd_zGFb7OQilrmpR9zQ"
+            ],
+            [
+                "sd_wcRjikbUDR3TEio0"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_zGFb7OQilrmpR9zQ",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "claimIdValidError",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "claimIdValidError",
+        "category": "HTTP",
+        "x": 865,
+        "y": 380,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_eHmTgVvZMigHV2Cc",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "claimFound",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.claimFound",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_eHmTgVvZMigHV2Cc",
+        "category": "Function",
+        "x": 1145,
+        "y": 500,
+        "wires": [
+            [
+                "sd_Xwhth1hn2ZmvQoJv"
+            ],
+            [
+                "sd_OV4n5bi5SkySxbRd"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_Xwhth1hn2ZmvQoJv",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "claimNotFoundError",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "claimNotFoundError",
+        "category": "HTTP",
+        "x": 1305,
+        "y": 380,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_OV4n5bi5SkySxbRd",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "prepareClaimResponse",
+        "script": "bh.local.responseStatus = 200;\n\nbh.local.response = {\n    success: true,\n    claim: bh.local.claim,\n    policy: bh.local.policy,\n    evidence: [],\n    decision: null\n};",
+        "functionName": "prepareClaimResponse",
+        "category": "Function",
+        "x": 1305,
+        "y": 500,
+        "wires": [
+            [
+                "sd_UlEe00O7eQRXHwhJ"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_nXvv3hKaNrwrVw9J",
+        "type": "HttpIn",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "start",
+        "name": "claimDecision",
+        "path": "/claims/decision",
+        "uploadpath": "",
+        "summary": "",
+        "description": "",
+        "method": "post",
+        "sequenceId": "",
+        "consumes": "",
+        "produces": "",
+        "filetype": "path",
+        "acceptFileUpload": false,
+        "useDataModel": false,
+        "dataModelIsArray": false,
+        "uploadFileOptions": "",
+        "erd": "",
+        "erdName": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "responses": [],
+            "params": [],
+            "produces": [],
+            "consumes": []
+        },
+        "inputs": 0,
+        "outputs": 1,
+        "validateRequestUsingSwaggerDocs": false,
+        "category": "HTTP",
+        "x": 405,
+        "y": 680,
+        "wires": [
+            [
+                "sd_FPzKcE7hCg5uRGS7"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "uploadpath": {
+                "type": "str",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Claim",
+        "functionName": "sd_nXvv3hKaNrwrVw9J"
+    },
+    {
+        "id": "sd_FPzKcE7hCg5uRGS7",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "Request validation Script",
+        "script": "const body = bh.input.body || {};\n\nbh.local.claimId = Number(body.claimId || 0);\nbh.local.decision = String(body.decision || \"\").trim();\nbh.local.status = String(body.status || \"\").trim();\nbh.local.decisionSource =\n    String(body.decisionSource || \"BPM\").trim();\nbh.local.decisionRole =\n    String(body.decisionRole || \"SYSTEM\").trim();\nbh.local.comments =\n    String(body.comments || \"\").trim();\nbh.local.correlationId =\n    String(body.correlationId || \"\").trim();\n\nbh.local.valid = true;\nbh.local.error = \"\";\n\nif (!bh.local.claimId) {\n    bh.local.valid = false;\n    bh.local.error = \"claimId is required\";\n}\n\nif (!bh.local.decision) {\n    bh.local.valid = false;\n    bh.local.error = \"decision is required\";\n}\n\nif (!bh.local.status) {\n    bh.local.valid = false;\n    bh.local.error = \"status is required\";\n}\nbh.local.claimSql = `\n    SELECT\n        id,\n        claim_number,\n        status\n    FROM public.claims\n    WHERE id = $1\n    LIMIT 1\n`;\n\nbh.local.claimSqlParams = [\n    bh.local.claimId\n];",
+        "functionName": "requestValidationScript",
+        "category": "Function",
+        "x": 545,
+        "y": 680,
+        "wires": [
+            [
+                "sd_UksgNe5d2MtSphDJ"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_UksgNe5d2MtSphDJ",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "claimResponse"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "claimSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "claimSqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "sd_UksgNe5d2MtSphDJ",
+        "category": "Storage",
+        "x": 705,
+        "y": 680,
+        "wires": [
+            [
+                "sd_6UK1r9m6ISnCAkfy"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_6UK1r9m6ISnCAkfy",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "claimResponse",
+        "script": "/* =========================================================\n   CLAIM LOOKUP RESPONSE\n   ========================================================= */\n\nconsole.log(\"========== CLAIM LOOKUP RESPONSE ==========\");\n\nconsole.log(\n    \"Raw claimResponse:\",\n    JSON.stringify(\n        bh.local.claimResponse,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   NORMALIZE SQL RESULT\n   ========================================================= */\n\nlet rows = bh.local.claimResponse;\n\n\n/*\n * SQL node may return:\n *\n * 1. Array\n * 2. { rows: [...] }\n * 3. { payload: [...] }\n * 4. { data: [...] }\n */\n\nif (Array.isArray(rows)) {\n\n    rows = rows;\n\n} else if (\n    rows &&\n    Array.isArray(rows.rows)\n) {\n\n    rows = rows.rows;\n\n} else if (\n    rows &&\n    rows.payload &&\n    Array.isArray(rows.payload)\n) {\n\n    rows = rows.payload;\n\n} else if (\n    rows &&\n    rows.data &&\n    Array.isArray(rows.data)\n) {\n\n    rows = rows.data;\n\n} else {\n\n    rows = [];\n}\n\n\n/* =========================================================\n   CLAIM NOT FOUND\n   ========================================================= */\n\nif (rows.length === 0) {\n\n    bh.local.claimFound = false;\n\n    bh.local.claimUpdateSuccess = false;\n\n    bh.local.auditInsertSuccess = false;\n\n    bh.local.responseStatus = 404;\n\n    bh.local.response = {\n\n        success: false,\n\n        message:\n            \"Claim not found\",\n\n        claimId:\n            Number(bh.local.claimId)\n    };\n\n    console.error(\n        \"Claim not found. Claim ID:\",\n        bh.local.claimId\n    );\n\n} else {\n\n    /* =====================================================\n       CLAIM FOUND\n       ===================================================== */\n\n    bh.local.claimFound = true;\n\n    bh.local.claimNumber =\n        String(\n            rows[0].claim_number ||\n            rows[0].claimNumber ||\n            \"\"\n        );\n\n    bh.local.oldStatus =\n        String(\n            rows[0].status ||\n            \"\"\n        );\n\n\n    /* =====================================================\n       PREPARE UPDATE SQL\n       ===================================================== */\n\n    const esc = (value) =>\n        String(\n            value == null ? \"\" : value\n        ).replace(/'/g, \"''\");\n\n\n    bh.local.updateSql =\n        \"UPDATE public.claims \" +\n        \"SET status = '\" +\n        esc(bh.local.status) +\n        \"', updated_at = CURRENT_TIMESTAMP \" +\n        \"WHERE id = \" +\n        Number(bh.local.claimId) +\n        \";\";\n\n\n    /* =====================================================\n       PREPARE AUDIT SQL\n       ===================================================== */\n\n    bh.local.auditSql =\n        \"INSERT INTO public.claim_audit (\" +\n        \"claim_id, \" +\n        \"event_type, \" +\n        \"user_id, \" +\n        \"user_role, \" +\n        \"action, \" +\n        \"comments, \" +\n        \"old_status, \" +\n        \"new_status, \" +\n        \"correlation_id, \" +\n        \"integration_name, \" +\n        \"integration_status\" +\n        \") VALUES (\" +\n\n        Number(bh.local.claimId) +\n        \", \" +\n\n        \"'CLAIM_DECISION', \" +\n\n        \"'\" +\n        esc(bh.local.decisionSource) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.decisionRole) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.decision) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.comments) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.oldStatus) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.status) +\n        \"', \" +\n\n        \"'\" +\n        esc(bh.local.correlationId) +\n        \"', \" +\n\n        \"'CLAIMS_DECISION_API', \" +\n\n        \"'SUCCESS'\" +\n\n        \");\";\n\n\n    console.log(\n        \"Claim found:\",\n        bh.local.claimFound\n    );\n\n    console.log(\n        \"Claim number:\",\n        bh.local.claimNumber\n    );\n\n    console.log(\n        \"Old status:\",\n        bh.local.oldStatus\n    );\n\n    console.log(\n        \"Update SQL:\",\n        bh.local.updateSql\n    );\n\n    console.log(\n        \"Audit SQL:\",\n        bh.local.auditSql\n    );\n}\n\n\nconsole.log(\n    \"==========================================\"\n);",
+        "functionName": "claimResponse",
+        "category": "Function",
+        "x": 865,
+        "y": 680,
+        "wires": [
+            [
+                "sd_adiRCBCQdG9dfJfN"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_GJqCbibOiy1u9Y1J",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "updateResponse"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "updateSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {},
+        "dbType": "postgres",
+        "functionName": "sd_GJqCbibOiy1u9Y1J",
+        "category": "Storage",
+        "x": 1145,
+        "y": 680,
+        "wires": [
+            [
+                "sd_K71ZxJUgoaFakUG2"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_h4DOQJf6U3qRKamD",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "script": "/* =========================================================\n   AUDIT INSERT SUCCESS\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM AUDIT ==========\"\n);\n\nconsole.log(\n    \"Audit SQL:\",\n    bh.local.auditSql\n);\n\nconsole.log(\n    \"Claim ID:\",\n    bh.local.claimId\n);\n\nconsole.log(\n    \"Correlation ID:\",\n    bh.local.correlationId\n);\n\n\n/*\n * SQL node completed without throwing an error.\n * Therefore audit INSERT was successful.\n */\n\nbh.local.auditInsertSuccess = true;\n\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\nconsole.log(\n    \"=================================\"\n);\n/* =========================================================\n   FINAL CLAIM DECISION RESPONSE\n   ========================================================= */\n\nconsole.log(\"========== FINAL CLAIM DECISION RESPONSE ==========\");\n\nconsole.log(\n    \"claimFound:\",\n    bh.local.claimFound\n);\n\nconsole.log(\n    \"claimUpdateSuccess:\",\n    bh.local.claimUpdateSuccess\n);\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\n\n/* =========================================================\n   NORMALIZE SUCCESS FLAGS\n   ========================================================= */\n\nconst claimFound =\n    bh.local.claimFound === true ||\n    bh.local.claimFound === \"true\";\n\nconst claimUpdateSuccess =\n    bh.local.claimUpdateSuccess === true ||\n    bh.local.claimUpdateSuccess === \"true\";\n\nconst auditInsertSuccess =\n    bh.local.auditInsertSuccess === true ||\n    bh.local.auditInsertSuccess === \"true\";\n\n\n/* =========================================================\n   FINAL SUCCESS\n   ========================================================= */\n\nif (\n    claimFound &&\n    claimUpdateSuccess &&\n    auditInsertSuccess\n) {\n\n    bh.local.responseStatus = 200;\n\n    bh.local.response = {\n\n        success: true,\n\n        message:\n            \"Claim decision updated successfully.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        oldStatus:\n            bh.local.oldStatus || \"\",\n\n        newStatus:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            true,\n\n        correlationId:\n            bh.local.correlationId || \"\"\n    };\n\n    console.log(\n        \"CLAIM DECISION SUCCESS\"\n    );\n\n} else {\n\n    bh.local.responseStatus = 500;\n\n    bh.local.response = {\n\n        success: false,\n\n        message:\n            \"Claim decision update failed.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            auditInsertSuccess,\n\n        correlationId:\n            bh.local.correlationId || \"\",\n\n        details: {\n\n            claimFound:\n                claimFound,\n\n            claimUpdateSuccess:\n                claimUpdateSuccess,\n\n            auditInsertSuccess:\n                auditInsertSuccess\n        }\n    };\n\n    console.error(\n        \"CLAIM DECISION FAILED\"\n    );\n}\n\n\nconsole.log(\n    \"Final response:\",\n    JSON.stringify(\n        bh.local.response,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Final response status:\",\n    bh.local.responseStatus\n);\n\nconsole.log(\n    \"==================================================\"\n);",
+        "functionName": "sd_h4DOQJf6U3qRKamD",
+        "category": "Function",
+        "x": 1625,
+        "y": 680,
+        "wires": [
+            [
+                "sd_7ZQ8LohFIJNdoMqV"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_7ZQ8LohFIJNdoMqV",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "Claim Decision update out",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "claimDecisionUpdateOut",
+        "category": "HTTP",
+        "x": 1765,
+        "y": 680,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_adiRCBCQdG9dfJfN",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "valid",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.valid",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_adiRCBCQdG9dfJfN",
+        "category": "Function",
+        "x": 1005,
+        "y": 680,
+        "wires": [
+            [
+                "sd_izbOulkkmBEGSPRY"
+            ],
+            [
+                "sd_GJqCbibOiy1u9Y1J"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_izbOulkkmBEGSPRY",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "claimNotFoundErrorDecision",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "claimNotFoundErrorDecision",
+        "category": "HTTP",
+        "x": 1145,
+        "y": 580,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_gSX5Qup3eGA0mrVX",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "auditResponse"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "auditSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {},
+        "dbType": "postgres",
+        "functionName": "sd_gSX5Qup3eGA0mrVX",
+        "category": "Storage",
+        "x": 1465,
+        "y": 680,
+        "wires": [
+            [
+                "sd_h4DOQJf6U3qRKamD"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_Qc8d8msrOrGRQPN9",
+        "type": "HttpIn",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "start",
+        "name": "createClaim",
+        "path": "/claims",
+        "uploadpath": "",
+        "summary": "",
+        "description": "",
+        "method": "post",
+        "sequenceId": "IDSAuthroizedAPIs",
+        "consumes": "",
+        "produces": "",
+        "filetype": "path",
+        "acceptFileUpload": false,
+        "useDataModel": false,
+        "dataModelIsArray": false,
+        "uploadFileOptions": "",
+        "erd": "",
+        "erdName": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "responses": [],
+            "params": [],
+            "produces": [],
+            "consumes": []
+        },
+        "inputs": 0,
+        "outputs": 1,
+        "validateRequestUsingSwaggerDocs": false,
+        "category": "HTTP",
+        "x": 405,
+        "y": 260,
+        "wires": [
+            [
+                "sd_9h6etim9BGY5ntMR"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "uploadpath": {
+                "type": "str",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Claim",
+        "functionName": "sd_Qc8d8msrOrGRQPN9"
+    },
+    {
+        "id": "sd_9h6etim9BGY5ntMR",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "createClaimValidateRequest",
+        "script": "const body = bh.input.body || {};\n\nconst requiredFields = [\n    \"policyId\",\n    \"lossDateTime\",\n    \"lossLocation\",\n    \"lossType\",\n    \"lossDescription\",\n    \"estimatedLossAmount\",\n    \"currency\"\n];\n\nconst missingFields = requiredFields.filter(\n    field =>\n        body[field] === undefined ||\n        body[field] === null ||\n        body[field] === \"\"\n);\n\nif (missingFields.length > 0) {\n\n    bh.local.isValid = false;\n\n    bh.local.validationErrors = missingFields;\n\n    bh.local.responseStatus = 400;\n\n    bh.local.response = {\n        success: false,\n        message: \"Required fields are missing\",\n        missingFields: missingFields\n    };\n\n}else{\n\n/*\n * Prepare claim values\n */\n\nbh.local.isValid = true;\n\nbh.local.policyId = body.policyId;\nbh.local.claimantType = body.claimantType || \"POLICYHOLDER\";\n\nbh.local.lossDateTime = body.lossDateTime;\nbh.local.lossLocation = body.lossLocation;\nbh.local.lossType = body.lossType;\nbh.local.lossDescription = body.lossDescription;\n\nbh.local.driverName = body.driverName || null;\nbh.local.driverLicenceStatus =\n    body.driverLicenceStatus || null;\n\nbh.local.policeReportAvailable =\n    body.policeReportAvailable ?? false;\n\nbh.local.policeReportReference =\n    body.policeReportReference || null;\n\nbh.local.estimatedLossAmount =\n    body.estimatedLossAmount;\n\nbh.local.currency =\n    body.currency || \"INR\";\n\nbh.local.vehicleDrivable =\n    body.vehicleDrivable ?? null;\n\nbh.local.thirdPartyInvolved =\n    body.thirdPartyInvolved ?? false;\n\nbh.local.injuryInvolved =\n    body.injuryInvolved ?? false;\n\nbh.local.preferredContactMethod =\n    body.preferredContactMethod || null;\n\nbh.local.preferredContactValue =\n    body.preferredContactValue || null;\n\nbh.local.createdBy =\n    body.createdBy || \"FNOL_USER\";\n\n\n/*\n * Prepare Policy Lookup SQL\n */\n\nbh.local.policySql = `\n    SELECT\n        id,\n        policy_number,\n        customer_id,\n        policy_status,\n        policy_start_date,\n        policy_end_date,\n        insured_name,\n        vehicle_registration,\n        vehicle_make,\n        vehicle_model,\n        vehicle_year,\n        coverage_type,\n        covered_perils,\n        excess_amount,\n        sum_insured,\n        currency\n    FROM policy_master\n    WHERE id = $1\n    LIMIT 1\n`;\n\nbh.local.policySqlParams = [\n    bh.local.policyId\n];\n}",
+        "functionName": "createClaimValidateRequest",
+        "category": "Function",
+        "x": 545,
+        "y": 260,
+        "wires": [
+            [
+                "sd_NA2IrffNoyTv9IKP"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_AMqtto7idEe3g99Q",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "sd_AMqtto7idEe3g99Q",
+        "category": "HTTP",
+        "x": 3605,
+        "y": 180,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_Nqv8AZG9Dwc6GAk8",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "policySearchSql",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "policyResult"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "policySql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "policySqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "policySearchSql",
+        "category": "Storage",
+        "x": 865,
+        "y": 260,
+        "wires": [
+            [
+                "sd_YSIlliLqD8ilDIxI"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_YSIlliLqD8ilDIxI",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "PolicyResultResponse",
+        "script": "const policyResult = bh.local.policyResult || [];\nconsole.log(\n    \"FULL POLICY OBJECT:\",\n    JSON.stringify(\n        bh.local.policyResult,\n        null,\n        2\n    )\n);\nif (!Array.isArray(policyResult) || policyResult.length === 0) {\n    bh.local.policyFound = false;\n\n    bh.local.responseStatus = 404;\n\n    bh.local.response = {\n        success: false,\n        message: \"Policy not found\",\n        policyId: bh.local.policyId\n    };\n\n}else{\n\nconst policy = policyResult[0];\n\nbh.local.policyFound = true;\nbh.local.policy = policy;\n\n// Keep the verified policy values available for the claim INSERT\nbh.local.verifiedPolicyId = policy.id;\nbh.local.policyNumber = policy.policy_number;\nbh.local.policyStatus = policy.policy_status;\n}",
+        "functionName": "policyResultResponse",
+        "category": "Function",
+        "x": 1005,
+        "y": 260,
+        "wires": [
+            [
+                "sd_HrSQlY17EwOT4c7m"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_NA2IrffNoyTv9IKP",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "CreateClaimisValidorNot",
+        "property": "isValid",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.isValid",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "createClaimisValidorNot",
+        "category": "Function",
+        "x": 705,
+        "y": 260,
+        "wires": [
+            [
+                "sd_KyuCgMnhJNWZQZwO"
+            ],
+            [
+                "sd_Nqv8AZG9Dwc6GAk8"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_KyuCgMnhJNWZQZwO",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "FieldMissingError",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "fieldMissingError",
+        "category": "HTTP",
+        "x": 865,
+        "y": 140,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_HrSQlY17EwOT4c7m",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "policyFound",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.policyFound",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_HrSQlY17EwOT4c7m",
+        "category": "Function",
+        "x": 1145,
+        "y": 260,
+        "wires": [
+            [
+                "sd_AriAdl1SaCDAC5lt"
+            ],
+            [
+                "sd_KlsRh5gLJwoxdEHX"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_AriAdl1SaCDAC5lt",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "policyNotFoundError",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "policyNotFoundError",
+        "category": "HTTP",
+        "x": 1305,
+        "y": 140,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_KlsRh5gLJwoxdEHX",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "claimPrepareSql",
+        "script": "const policyId = bh.local.verifiedPolicyId;\n\nbh.local.claimSql = `\n    INSERT INTO claims (\n        claim_number,\n        policy_id,\n        claimant_type,\n        loss_date_time,\n        loss_location,\n        loss_type,\n        loss_description,\n        driver_name,\n        driver_licence_status,\n        police_report_available,\n        police_report_reference,\n        estimated_loss_amount,\n        currency,\n        vehicle_drivable,\n        third_party_involved,\n        injury_involved,\n        preferred_contact_method,\n        preferred_contact_value,\n        status,\n        created_by\n    )\n    VALUES (\n        'CLM' ||\n        TO_CHAR(CURRENT_DATE, 'YYYYMMDD') ||\n        LPAD(\n            nextval('claim_number_seq')::TEXT,\n            6,\n            '0'\n        ),\n        $1,\n        $2,\n        $3,\n        $4,\n        $5,\n        $6,\n        $7,\n        $8,\n        $9,\n        $10,\n        $11,\n        $12,\n        $13,\n        $14,\n        $15,\n        $16,\n        $17,\n        'FNOL_SUBMITTED',\n        $18\n    )\n    RETURNING\n        id,\n        claim_number,\n        policy_id,\n        status,\n        created_at;\n`;\n\nbh.local.claimSqlParams = [\n    policyId,\n    bh.local.claimantType,\n    bh.local.lossDateTime,\n    bh.local.lossLocation,\n    bh.local.lossType,\n    bh.local.lossDescription,\n    bh.local.driverName,\n    bh.local.driverLicenceStatus,\n    bh.local.policeReportAvailable,\n    bh.local.policeReportReference,\n    bh.local.estimatedLossAmount,\n    bh.local.currency,\n    bh.local.vehicleDrivable,\n    bh.local.thirdPartyInvolved,\n    bh.local.injuryInvolved,\n    bh.local.preferredContactMethod,\n    bh.local.preferredContactValue,\n    bh.local.createdBy\n];\n",
+        "functionName": "claimPrepareSql",
+        "category": "Function",
+        "x": 1305,
+        "y": 260,
+        "wires": [
+            [
+                "sd_DZU38I248sgYl3p8"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_DZU38I248sgYl3p8",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "claimSql",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "queryType": "",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "claimResult"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "claimSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "params": [],
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "claimSqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "claimSql",
+        "category": "Storage",
+        "x": 1465,
+        "y": 260,
+        "wires": [
+            [
+                "sd_PTFil1LUp9V6waQe"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_NfJx3R5Cpk0yw1n6",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "prepareEvidence",
+        "script": "const body = bh.input.body || {};\n\nconst evidence = body.evidence || [];\n\nbh.local.evidence = evidence;\n\nbh.local.hasEvidence =\n    Array.isArray(evidence) &&\n    evidence.length > 0;\n\nconsole.log(\"Evidence received:\", evidence);\nconsole.log(\"Has evidence:\", bh.local.hasEvidence);\n",
+        "functionName": "prepareEvidence",
+        "category": "Function",
+        "x": 1965,
+        "y": 260,
+        "wires": [
+            [
+                "sd_9Hkeq5HO61SnRM4H"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_PTFil1LUp9V6waQe",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "Check claim result",
+        "script": "const claimResult = bh.local.claimResult || [];\n\nconsole.log(\"========== CLAIM RESULT ==========\");\nconsole.log(claimResult);\n\nif (!Array.isArray(claimResult) || claimResult.length === 0) {\n\n    bh.local.claimCreated = false;\n\n    bh.local.responseStatus = 500;\n\n    bh.local.response = {\n        success: false,\n        message: \"Claim creation failed. No claim record was returned.\"\n    };\n\n} else {\n\n    const claim = claimResult[0];\n\n    bh.local.claimCreated = true;\n\n    bh.local.claim = claim;\n\n    bh.local.claimId = claim.id;\n    bh.local.claimNumber = claim.claim_number;\n    bh.local.claimPolicyId = claim.policy_id;\n    bh.local.claimStatus = claim.status;\n    bh.local.claimCreatedAt = claim.created_at;\n\n    console.log(\"Claim created successfully\");\n    console.log(\"Claim ID:\", bh.local.claimId);\n    console.log(\"Claim Number:\", bh.local.claimNumber);\n    console.log(\"Policy ID:\", bh.local.claimPolicyId);\n    console.log(\"Claim Status:\", bh.local.claimStatus);\n}",
+        "functionName": "checkClaimResult",
+        "category": "Function",
+        "x": 1620,
+        "y": 260,
+        "wires": [
+            [
+                "sd_OYldrUdSavQNSwTn"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_OYldrUdSavQNSwTn",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "claimCreated",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.claimCreated",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_OYldrUdSavQNSwTn",
+        "category": "Function",
+        "x": 1765,
+        "y": 260,
+        "wires": [
+            [
+                "sd_73scAe0oV9VJ777d"
+            ],
+            [
+                "sd_NfJx3R5Cpk0yw1n6"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_73scAe0oV9VJ777d",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "UnabletoCreateClaimError",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "response",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "bh.local",
+            "value": "responseStatus",
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": "bh.local.responseStatus",
+            "obj": "bh.local.response",
+            "send": "bh.local.response"
+        },
+        "dataModelIsArray": false,
+        "cookies": [],
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "unabletoCreateClaimError",
+        "category": "HTTP",
+        "x": 1925,
+        "y": 140,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_9Hkeq5HO61SnRM4H",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "hasEvidence",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.hasEvidence",
+        "rules": [
+            {
+                "t": "false"
+            },
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_9Hkeq5HO61SnRM4H",
+        "category": "Function",
+        "x": 2085,
+        "y": 260,
+        "wires": [
+            [
+                "sd_0U0yqeAisB3qH74X"
+            ],
+            [
+                "sd_XOMjhmhgEyNaMVuU"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_aGMTb3Jjg0TFRlXv",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "Final Response Script",
+        "script": "/* =========================================================\n   CASE CREATION RESPONSE\n   ========================================================= */\n\nconst rawCaseResponse =\n    bh.local.caseCreationResponse || {};\n\n\nconst caseResponse =\n    rawCaseResponse &&\n    rawCaseResponse.payload &&\n    typeof rawCaseResponse.payload === \"object\"\n        ? rawCaseResponse.payload\n        : rawCaseResponse;\n\n\nbh.local.caseCreationResponse =\n    caseResponse;\n\n\n/* =========================================================\n   EXTRACT CASE ID\n   ========================================================= */\n\nbh.local.caseId =\n    caseResponse.caseId ||\n    caseResponse.id ||\n    caseResponse.caseInstanceId ||\n    (\n        caseResponse.case &&\n        (\n            caseResponse.case.caseId ||\n            caseResponse.case.id ||\n            caseResponse.case.caseInstanceId\n        )\n    ) ||\n    null;\n\n\n/* =========================================================\n   DETERMINE SUCCESS\n   ========================================================= */\n\nbh.local.caseCreated =\n    !!(\n        bh.local.caseId ||\n        caseResponse.success === true ||\n        caseResponse.status === \"SUCCESS\"\n    );\n\n\nconsole.log(\n    \"========== CASE CREATION RESPONSE ==========\"\n);\n\nconsole.log(\n    JSON.stringify(\n        caseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case ID:\",\n    bh.local.caseId\n);\n\nconsole.log(\n    \"Case Created:\",\n    bh.local.caseCreated\n);\n\nconsole.log(\n    \"=============================================\"\n);",
+        "functionName": "finalResponseScript",
+        "category": "Function",
+        "x": 3385,
+        "y": 180,
+        "wires": [
+            [
+                "sd_AMqtto7idEe3g99Q"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_XOMjhmhgEyNaMVuU",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "prepareDmsUpload",
+        "script": "const evidence = bh.local.evidence || [];\n\nbh.local.dmsFiles = evidence.map(file => ({\n    claimId: bh.local.claimId,\n    documentType: file.documentType,\n    fileName: file.fileName || file.name,\n    mimeType: file.mimeType || file.type,\n    fileSize: file.fileSize || file.size,\n    file: file.file\n}));\n\nbh.local.dmsFileCount = bh.local.dmsFiles.length;\n\nconsole.log(\"DMS files prepared:\", bh.local.dmsFiles);\n",
+        "functionName": "prepareDmsUpload",
+        "category": "Function",
+        "x": 2225,
+        "y": 300,
+        "wires": [
+            []
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_0U0yqeAisB3qH74X",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "prepareCaseCreation",
+        "script": "const policy = bh.local.policy || {};\nconst claim = bh.local.claim || {};\n\n\n/* =========================================================\n   CASE CREATION URL\n   ========================================================= */\n\nconst BASE_URL =\n    bh.system.environment.CASE_SERVICE_BASE_URL;\n\nbh.local.caseCreationUrl =\n    (BASE_URL || \"\").replace(/\\/+$/, \"\") +\n    \"/caseservice/case/instance/create?branch=main\";\n\n\n/* =========================================================\n   CASE CREATION REQUEST\n   ========================================================= */\n\nbh.local.caseCreationRequest = {\n\n    caseType: \"fnol_claim\",\n\n    caseData: {\n\n        claimId:\n            Number(bh.local.claimId),\n\n        policyId:\n            Number(\n                bh.local.claimPolicyId ||\n                bh.local.verifiedPolicyId\n            ),\n\n        claimNumber:\n            bh.local.claimNumber,\n\n        policyNumber:\n            bh.local.policyNumber,\n\n        lossType:\n            bh.local.lossType,\n\n        lossDateTime:\n            bh.local.lossDateTime,\n\n        lossLocation:\n            bh.local.lossLocation,\n\n        estimatedLossAmount:\n            Number(\n                bh.local.estimatedLossAmount || 0\n            ),\n\n        claimantType:\n            bh.local.claimantType,\n\n        driverName:\n            bh.local.driverName,\n\n        driverLicenceStatus:\n            bh.local.driverLicenceStatus,\n\n        policeReportAvailable:\n            !!bh.local.policeReportAvailable,\n\n        repairEstimateAvailable:\n            !!bh.local.repairEstimateAvailable,\n\n        vehicleDrivable:\n            !!bh.local.vehicleDrivable,\n\n        thirdPartyInvolved:\n            !!bh.local.thirdPartyInvolved,\n\n        injuryInvolved:\n            !!bh.local.injuryInvolved,\n\n        mandatoryDocsComplete:\n            !!bh.local.mandatoryDocsComplete,\n\n        manualReviewOverride:\n            !!bh.local.manualReviewOverride,\n\n        policyStatus:\n            bh.local.policyStatus,\n\n        policyStartDate:\n            policy.policy_start_date,\n\n        policyEndDate:\n            policy.policy_end_date,\n\n        perilCovered:\n            !!bh.local.perilCovered,\n\n        coverageValid:\n            !!bh.local.coverageValid,\n\n        sumInsured:\n            Number(\n                policy.sum_insured || 0\n            ),\n\n        excessAmount:\n            Number(\n                policy.excess_amount || 0\n            ),\n\n        fraudScore:\n            Number(\n                bh.local.fraudScore || 0\n            ),\n\n        duplicateClaimFlag:\n            !!bh.local.duplicateClaimFlag,\n\n        blacklistedEntityFlag:\n            !!bh.local.blacklistedEntityFlag,\n\n        suspiciousPatternFlag:\n            !!bh.local.suspiciousPatternFlag,\n\n        priorClaims12m:\n            Number(\n                bh.local.priorClaims12m || 0\n            ),\n\n        claimAmount:\n            Number(\n                bh.local.claimAmount || 0\n            ),\n\n        injuryClear:\n            !!bh.local.injuryClear,\n\n        stpEligible:\n            !!bh.local.stpEligible,\n\n        policyActive:\n            !!bh.local.policyActive,\n\n        evidenceValid:\n            !!bh.local.evidenceValid,\n\n        recommendation:\n            bh.local.recommendation || \"\",\n\n        policyAgeDays:\n            Number(\n                bh.local.policyAgeDays || 0\n            ),\n\n        stpFraudValid:\n            !!bh.local.stpFraudValid,\n\n        policyAgeValid:\n            !!bh.local.policyAgeValid,\n\n        stpAmountValid:\n            !!bh.local.stpAmountValid,\n\n        priorClaimsValid:\n            !!bh.local.priorClaimsValid,\n\n        policeReportValid:\n            !!bh.local.policeReportValid,\n\n        criticalFraudClear:\n            !!bh.local.criticalFraudClear,\n\n        repairEstimateValid:\n            !!bh.local.repairEstimateValid,\n\n        managerAuthorityExceeded:\n            !!bh.local.managerAuthorityExceeded,\n\n        thirdPartyComplexityFlag:\n            !!bh.local.thirdPartyComplexityFlag,\n\n        claimAmountWithinCoverage:\n            !!bh.local.claimAmountWithinCoverage,\n\n        fraudInvestigationRequired:\n            !!bh.local.fraudInvestigationRequired,\n\n        thirdPartyComplexityClear:\n            !!bh.local.thirdPartyComplexityClear,\n\n        lossDateWithinPolicyPeriod:\n            !!bh.local.lossDateWithinPolicyPeriod\n    },\n\n    wfData: {\n\n        claimId:\n            Number(bh.local.claimId),\n\n        policyId:\n            Number(\n                bh.local.claimPolicyId ||\n                bh.local.verifiedPolicyId\n            ),\n\n        claimNumber:\n            bh.local.claimNumber,\n\n        policyNumber:\n            bh.local.policyNumber,\n\n        lossType:\n            bh.local.lossType,\n\n        lossDateTime:\n            bh.local.lossDateTime,\n\n        lossLocation:\n            bh.local.lossLocation,\n\n        estimatedLossAmount:\n            Number(\n                bh.local.estimatedLossAmount || 0\n            ),\n\n        claimantType:\n            bh.local.claimantType,\n\n        driverName:\n            bh.local.driverName,\n\n        driverLicenceStatus:\n            bh.local.driverLicenceStatus,\n\n        policeReportAvailable:\n            !!bh.local.policeReportAvailable,\n\n        repairEstimateAvailable:\n            !!bh.local.repairEstimateAvailable,\n\n        vehicleDrivable:\n            !!bh.local.vehicleDrivable,\n\n        thirdPartyInvolved:\n            !!bh.local.thirdPartyInvolved,\n\n        injuryInvolved:\n            !!bh.local.injuryInvolved,\n\n        mandatoryDocsComplete:\n            !!bh.local.mandatoryDocsComplete,\n\n        manualReviewOverride:\n            !!bh.local.manualReviewOverride,\n\n        policyStatus:\n            bh.local.policyStatus,\n\n        policyStartDate:\n            policy.policy_start_date,\n\n        policyEndDate:\n            policy.policy_end_date,\n\n        perilCovered:\n            !!bh.local.perilCovered,\n\n        coverageValid:\n            !!bh.local.coverageValid,\n\n        sumInsured:\n            Number(\n                policy.sum_insured || 0\n            ),\n\n        excessAmount:\n            Number(\n                policy.excess_amount || 0\n            ),\n\n        fraudScore:\n            Number(\n                bh.local.fraudScore || 0\n            ),\n\n        duplicateClaimFlag:\n            !!bh.local.duplicateClaimFlag,\n\n        blacklistedEntityFlag:\n            !!bh.local.blacklistedEntityFlag,\n\n        suspiciousPatternFlag:\n            !!bh.local.suspiciousPatternFlag,\n\n        priorClaims12m:\n            Number(\n                bh.local.priorClaims12m || 0\n            ),\n\n        claimAmount:\n            Number(\n                bh.local.claimAmount || 0\n            ),\n\n        injuryClear:\n            !!bh.local.injuryClear,\n\n        stpEligible:\n            !!bh.local.stpEligible,\n\n        policyActive:\n            !!bh.local.policyActive,\n\n        evidenceValid:\n            !!bh.local.evidenceValid,\n\n        recommendation:\n            bh.local.recommendation || \"\",\n\n        policyAgeDays:\n            Number(\n                bh.local.policyAgeDays || 0\n            ),\n\n        stpFraudValid:\n            !!bh.local.stpFraudValid,\n\n        policyAgeValid:\n            !!bh.local.policyAgeValid,\n\n        stpAmountValid:\n            !!bh.local.stpAmountValid,\n\n        priorClaimsValid:\n            !!bh.local.priorClaimsValid,\n\n        policeReportValid:\n            !!bh.local.policeReportValid,\n\n        criticalFraudClear:\n            !!bh.local.criticalFraudClear,\n\n        repairEstimateValid:\n            !!bh.local.repairEstimateValid,\n\n        managerAuthorityExceeded:\n            !!bh.local.managerAuthorityExceeded,\n\n        thirdPartyComplexityFlag:\n            !!bh.local.thirdPartyComplexityFlag,\n\n        claimAmountWithinCoverage:\n            !!bh.local.claimAmountWithinCoverage,\n\n        fraudInvestigationRequired:\n            !!bh.local.fraudInvestigationRequired,\n\n        thirdPartyComplexityClear:\n            !!bh.local.thirdPartyComplexityClear,\n\n        lossDateWithinPolicyPeriod:\n            !!bh.local.lossDateWithinPolicyPeriod\n    }\n};\n\n\n/* =========================================================\n   CASE CREATION BODY\n   ========================================================= */\n\nbh.local.caseCreationBody =\n    JSON.stringify(\n        bh.local.caseCreationRequest\n    );\n\n\nconsole.log(\n    \"========== CASE CREATION PREPARED ==========\"\n);\n\nconsole.log(\n    \"Case Creation URL:\",\n    bh.local.caseCreationUrl\n);\n\nconsole.log(\n    \"Case Creation Body:\",\n    bh.local.caseCreationBody\n);\n\nconsole.log(\n    \"============================================\"\n);",
+        "functionName": "prepareCaseCreation",
+        "category": "Function",
+        "x": 2365,
+        "y": 180,
+        "wires": [
+            [
+                "sd_vep2HC4paGtcdlXq"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_4QK9mgdnVKSMK6ri",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "createFNOLCase",
+        "method": "post",
+        "methodMapping": "",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.caseCreationUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseCreationUrl"
+        },
+        "ret": "json",
+        "retMapping": "",
+        "retMappingObj": {},
+        "reqBody": "bh.local.caseCreationBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseCreationBody"
+        },
+        "resultMapping": "bh.local.caseCreationResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseCreationResponse"
+        },
+        "headers": [],
+        "headersObj": {},
+        "headerMapping": "bh.local.caseCreationHeaders",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseCreationHeaders"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMapping": "",
+        "paramMappingObj": {},
+        "authType": "",
+        "useAuthTypeMappingObj": {},
+        "useAuthTypeMap": {},
+        "useAuthType": "",
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": {},
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": {},
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": ""
+        },
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": false,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookies": [],
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "createFnolCase",
+        "category": "HTTP",
+        "x": 3225,
+        "y": 180,
+        "wires": [
+            [
+                "sd_aGMTb3Jjg0TFRlXv"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_wJ6RWVGHyzYOBWlq",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "getCaseServiceToken",
+        "method": "post",
+        "methodMapping": "",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.caseTokenUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseTokenUrl"
+        },
+        "ret": "json",
+        "retMapping": "",
+        "retMappingObj": {},
+        "reqBody": "bh.local.caseTokenBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseTokenBody"
+        },
+        "resultMapping": "bh.local.caseTokenResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseTokenResponse"
+        },
+        "headers": [],
+        "headersObj": {},
+        "headerMapping": "bh.local.caseTokenHeaders",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "caseTokenHeaders"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMapping": "",
+        "paramMappingObj": {},
+        "authType": "",
+        "useAuthTypeMappingObj": {},
+        "useAuthTypeMap": {},
+        "useAuthType": "",
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": {
+            "mapVarType": "str",
+            "mapVarValue": ""
+        },
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": {
+            "mapVarType": "str",
+            "mapVarValue": ""
+        },
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": "",
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": true,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookies": [],
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "getCaseServiceToken",
+        "category": "HTTP",
+        "x": 2700,
+        "y": 180,
+        "wires": [
+            [
+                "sd_YEMgtLProOfzwVr1"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_YEMgtLProOfzwVr1",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "tokenResponse",
+        "script": "const rawTokenResponse =\n    bh.local.caseTokenResponse || {};\n\n\nconst tokenResponse =\n    rawTokenResponse &&\n    rawTokenResponse.payload &&\n    typeof rawTokenResponse.payload === \"object\"\n        ? rawTokenResponse.payload\n        : rawTokenResponse;\n\n\nconsole.log(\n    \"========== CASE TOKEN RESPONSE ==========\"\n);\n\nconsole.log(\n    JSON.stringify(\n        tokenResponse,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   VALIDATE TOKEN\n   ========================================================= */\n\nif (\n    !tokenResponse.access_token ||\n    typeof tokenResponse.access_token !== \"string\" ||\n    !tokenResponse.access_token.trim()\n) {\n\n    bh.local.caseTokenSuccess = false;\n\n    bh.local.caseAccessToken = \"\";\n\n    bh.local.caseCreationReady = false;\n\n    console.error(\n        \"Case Service authentication failed: access token missing.\"\n    );\n\n} else {\n\n    bh.local.caseTokenSuccess = true;\n\n    bh.local.caseAccessToken =\n        tokenResponse.access_token.trim();\n\n    bh.local.caseCreationReady = true;\n\n    console.log(\n        \"Case Service authentication successful.\"\n    );\n\n    console.log(\n        \"Access token received:\",\n        true\n    );\n}\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"Case Token Success:\",\n    bh.local.caseTokenSuccess\n);\n\nconsole.log(\n    \"Case Creation Ready:\",\n    bh.local.caseCreationReady\n);\n\nconsole.log(\n    \"==========================================\"\n);",
+        "functionName": "tokenResponse",
+        "category": "Function",
+        "x": 2820,
+        "y": 180,
+        "wires": [
+            [
+                "sd_T7ACuHxWhJiusQHT"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_vep2HC4paGtcdlXq",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "getCaseServiceTokenScript",
+        "script": "const CLIENT_ID =\n    bh.system.environment.CASE_SERVICE_CLIENT_ID;\n\nconst CLIENT_SECRET =\n    bh.system.environment.CASE_SERVICE_CLIENT_SECRET;\n\n\n/* =========================================================\n   TOKEN URL\n   ========================================================= */\n\nbh.local.caseTokenUrl =\n    \"https://ids-ctr-pt.neutrinos-apps.com/token\";\n\n\n/* =========================================================\n   TOKEN BODY\n   ========================================================= */\n\nbh.local.caseTokenBody =\n    \"grant_type=client_credentials&client_id=\" +\n    encodeURIComponent(CLIENT_ID) +\n    \"&client_secret=\" +\n    encodeURIComponent(CLIENT_SECRET);\n\n\n/* =========================================================\n   TOKEN HEADERS\n   ========================================================= */\n\nbh.local.caseTokenHeaders = {\n\n    \"Content-Type\":\n        \"application/x-www-form-urlencoded\"\n};\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CASE TOKEN REQUEST ==========\"\n);\n\nconsole.log(\n    \"URL:\",\n    bh.local.caseTokenUrl\n);\n\nconsole.log(\n    \"Body:\",\n    bh.local.caseTokenBody\n);\n\nconsole.log(\n    \"Headers:\",\n    JSON.stringify(\n        bh.local.caseTokenHeaders,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"=========================================\"\n);",
+        "functionName": "getCaseServiceTokenScript",
+        "category": "Function",
+        "x": 2525,
+        "y": 180,
+        "wires": [
+            [
+                "sd_wJ6RWVGHyzYOBWlq"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_T7ACuHxWhJiusQHT",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "createFNOLCaseScript",
+        "script": "/* =========================================================\n   PREPARE CASE CREATION HTTP REQUEST\n   ========================================================= */\n\nif (\n    !bh.local.caseAccessToken ||\n    typeof bh.local.caseAccessToken !== \"string\" ||\n    !bh.local.caseAccessToken.trim()\n) {\n\n    bh.local.caseCreationReady = false;\n\n    console.error(\n        \"CASE CREATION STOPPED: access token missing.\"\n    );\n\n} else {\n\n    /* =====================================================\n       URL\n       ===================================================== */\n\n    const BASE_URL =\n        bh.system.environment.CASE_SERVICE_BASE_URL;\n\n\n    bh.local.caseCreationUrl =\n        (BASE_URL || \"\").replace(/\\/+$/, \"\") +\n        \"/caseservice/case/instance/create?branch=main\";\n\n\n    /* =====================================================\n       HEADERS\n       ===================================================== */\n\n    bh.local.caseCreationHeaders = {\n\n        \"Authorization\":\n            \"Bearer \" +\n            bh.local.caseAccessToken.trim(),\n\n        \"Content-Type\":\n            \"application/json\",\n\n        \"Accept\":\n            \"application/json\"\n    };\n\n\n    /* =====================================================\n       BODY\n       ===================================================== */\n\n    bh.local.caseCreationBody =\n        JSON.stringify(\n            bh.local.caseCreationRequest\n        );\n\n\n    bh.local.caseCreationReady = true;\n\n\n    /* =====================================================\n       DEBUG\n       ===================================================== */\n\n    console.log(\n        \"========== CASE CREATION HTTP REQUEST ==========\"\n    );\n\n    console.log(\n        \"URL:\",\n        bh.local.caseCreationUrl\n    );\n\n    console.log(\n        \"Headers:\",\n        JSON.stringify(\n            bh.local.caseCreationHeaders,\n            null,\n            2\n        )\n    );\n\n    console.log(\n        \"Body:\",\n        bh.local.caseCreationBody\n    );\n\n    console.log(\n        \"Ready:\",\n        bh.local.caseCreationReady\n    );\n\n    console.log(\n        \"=================================================\"\n    );\n}",
+        "functionName": "createFnolCaseScript",
+        "category": "Function",
+        "x": 3005,
+        "y": 180,
+        "wires": [
+            [
+                "sd_4QK9mgdnVKSMK6ri"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_K71ZxJUgoaFakUG2",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "CLAIM UPDATE SUCCESS",
+        "script": "/* =========================================================\n   CLAIM UPDATE SUCCESS\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM UPDATE ==========\"\n);\n\nconsole.log(\n    \"Update SQL:\",\n    bh.local.updateSql\n);\n\nconsole.log(\n    \"Claim ID:\",\n    bh.local.claimId\n);\n\nconsole.log(\n    \"New Status:\",\n    bh.local.status\n);\n\n\n/*\n * SQL node completed without throwing an error.\n * Therefore the UPDATE was successful.\n */\n\nbh.local.claimUpdateSuccess = true;\n\n\nconsole.log(\n    \"claimUpdateSuccess:\",\n    bh.local.claimUpdateSuccess\n);\n\nconsole.log(\n    \"==================================\"\n);",
+        "functionName": "claimUpdateSuccess",
+        "category": "Function",
+        "x": 1305,
+        "y": 680,
+        "wires": [
+            [
+                "sd_gSX5Qup3eGA0mrVX"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    }
+]

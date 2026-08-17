@@ -1,0 +1,14 @@
+{
+    "displayName": "fnol-policy-claim-api",
+    "appName": "fnol-policy-claim-api",
+    "description": "fnol policy claim api",
+    "lastModified": "2026-08-12T06:58:59.865Z",
+    "imgSourcePath": "",
+    "version": "1.0.0",
+    "appType": "apiOnly",
+    "templateName": "blank",
+    "createDate": "2026-08-12T06:58:10.760Z",
+    "analyticsId": "48729f98-417d-8246-300d-8f576c96b5f1",
+    "createdStudioVersion": "9.3.0",
+    "isCorrupt": false
+}
