@@ -83,6 +83,24 @@
                     "rowId": "sd_hEiapXrd6YUGNVYl",
                     "valid": true,
                     "type": "str"
+                },
+                {
+                    "key": "https://fnolui.neutrinos-apps.com",
+                    "rowId": "sd_eFKESiKD81EI6LA5",
+                    "valid": true,
+                    "type": "str"
+                },
+                {
+                    "key": "https://fnolapi.neutrinos-apps.com",
+                    "rowId": "sd_NFzlfiPguwmBvs2p",
+                    "valid": true,
+                    "type": "str"
+                },
+                {
+                    "key": "https://alpha-pt.neutrinos-apps.com",
+                    "rowId": "sd_tjCkHyejYg9hQ8rY",
+                    "valid": true,
+                    "type": "str"
                 }
             ]
         },

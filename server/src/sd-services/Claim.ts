@@ -873,7 +873,7 @@ export class Claim {
       } else {
         throw new Error('Cannot find the selected config name');
       }
-      let params = undefined;
+      let params = [];
       params = params ? params : [];
       bh.local.updateResponse = await new GenericRDBMSOperations().executeSQL(
         connectionName,
@@ -958,7 +958,7 @@ export class Claim {
       } else {
         throw new Error('Cannot find the selected config name');
       }
-      let params = undefined;
+      let params = [];
       params = params ? params : [];
       bh.local.auditResponse = await new GenericRDBMSOperations().executeSQL(
         connectionName,

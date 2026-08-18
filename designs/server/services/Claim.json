@@ -494,7 +494,6 @@
         "nodeType": "flow",
         "name": "",
         "databaseConfig": "sd_OhBYahJpKIdIWsaK",
-        "queryType": "",
         "resultMap": {
             "type": "bh.local",
             "value": "claimResponse"
@@ -506,7 +505,6 @@
         },
         "inputs": 1,
         "outputs": 1,
-        "params": [],
         "paramMappingObj": {
             "type": "bh.local",
             "value": "claimSqlParams"
@@ -556,7 +554,6 @@
         "nodeType": "flow",
         "name": "",
         "databaseConfig": "sd_OhBYahJpKIdIWsaK",
-        "queryType": "",
         "resultMap": {
             "type": "bh.local",
             "value": "updateResponse"
@@ -569,7 +566,6 @@
         "inputs": 1,
         "outputs": 1,
         "params": [],
-        "paramMappingObj": {},
         "dbType": "postgres",
         "functionName": "sd_GJqCbibOiy1u9Y1J",
         "category": "Storage",
@@ -759,7 +755,6 @@
         "nodeType": "flow",
         "name": "",
         "databaseConfig": "sd_OhBYahJpKIdIWsaK",
-        "queryType": "",
         "resultMap": {
             "type": "bh.local",
             "value": "auditResponse"
@@ -772,7 +767,6 @@
         "inputs": 1,
         "outputs": 1,
         "params": [],
-        "paramMappingObj": {},
         "dbType": "postgres",
         "functionName": "sd_gSX5Qup3eGA0mrVX",
         "category": "Storage",

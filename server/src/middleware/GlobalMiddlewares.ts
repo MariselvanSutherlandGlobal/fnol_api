@@ -11,7 +11,12 @@ const __dirname = dirname(__filename);
 export let Middlewares = {
   sd_Tp9jNbUvUZ1kJnAn: () => {
     let corsOptions = {
-      origin: ['http://localhost:4200'],
+      origin: [
+        'http://localhost:4200',
+        'https://fnolui.neutrinos-apps.com',
+        'https://fnolapi.neutrinos-apps.com',
+        'https://alpha-pt.neutrinos-apps.com',
+      ],
 
       credentials: false,
 
