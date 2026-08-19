@@ -25,5 +25,18 @@
             ]
         }
     },
-    "/claims": {}
+    "/claims": {},
+    "/master-data": {
+        "get": {
+            "summary": "Get FNOL dropdown master data",
+            "description": "Returns claimant type, loss type, loss location and driver licence status master data.",
+            "consumes": [],
+            "produces": [],
+            "parameters": [],
+            "responses": {},
+            "tags": [
+                "Claim"
+            ]
+        }
+    }
 }

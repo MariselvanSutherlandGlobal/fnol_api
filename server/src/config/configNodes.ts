@@ -418,5 +418,44 @@ export default {
             },
             "__n_excludedFromValidation__": {}
         }
+    },
+    "emailout-config": {
+        "sd_Tx8xifuCc5sWAFFF": {
+            "id": "sd_Tx8xifuCc5sWAFFF",
+            "type": "emailout-config",
+            "viewType": "server",
+            "nodeType": "flow",
+            "name": "SendGridSMTP",
+            "server": "smtp.sendgrid.net",
+            "port": 587,
+            "tls": true,
+            "secure": false,
+            "userid": "apikey",
+            "password": "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",
+            "category": "config",
+            "__ssdTypeInputs__": {
+                "server": {
+                    "type": "str",
+                    "value": "smtp.sendgrid.net",
+                    "constant": false
+                },
+                "port": {
+                    "type": "num",
+                    "value": "587",
+                    "constant": false
+                },
+                "userid": {
+                    "type": "str",
+                    "value": "apikey",
+                    "constant": false
+                },
+                "password": {
+                    "type": "str",
+                    "value": "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",
+                    "constant": false
+                }
+            },
+            "__n_excludedFromValidation__": {}
+        }
     }
 }

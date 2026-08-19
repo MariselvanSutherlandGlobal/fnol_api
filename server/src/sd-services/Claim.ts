@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'; //_splitter_
 import { SDBaseService } from '../services/SDBaseService'; //_splitter_
 import { TracerService } from '../services/TracerService'; //_splitter_
 import log from '../utils/Logger'; //_splitter_
+import { EmailOutService } from '../utils/ndefault-email/EmailOut/EmailOutService'; //_splitter_
 import { GenericRDBMSOperations } from '../utils/ndefault-sql/ExecuteSql/GenericRDBMSOperations'; //_splitter_
 //append_imports_end
 const __filename = fileURLToPath(import.meta.url);
@@ -179,10 +180,81 @@ export class Claim {
         this.generatedMiddlewares
       )
     );
+
+    this.app['get'](
+      `${this.serviceBasePath}/master-data`,
+      cookieParser(),
+      this.sdService.getMiddlesWaresBySequenceId(
+        'IDSAuthroizedAPIs',
+        'pre',
+        this.generatedMiddlewares
+      ),
+
+      async (req, res, next) => {
+        let bh: any = {};
+        try {
+          bh = this.sdService.__constructDefault(
+            { local: {}, input: {} },
+            req,
+            res,
+            next
+          );
+          let parentSpanInst = null;
+          bh = await this.getFnolMasterDataCallService(bh, parentSpanInst);
+          //appendnew_next_sd_AkPstqgszKFA1tfV
+        } catch (e) {
+          return await this.errorHandler(bh, e, 'sd_AkPstqgszKFA1tfV');
+        }
+      },
+      this.sdService.getMiddlesWaresBySequenceId(
+        'IDSAuthroizedAPIs',
+        'post',
+        this.generatedMiddlewares
+      )
+    );
     //appendnew_flow_Claim_HttpIn
   }
   //   service flows_Claim
 
+  async getFnolMasterDataInternal(
+    parentSpanInst,
+    masterDataResponse: any = undefined,
+    ...others
+  ) {
+    const spanInst = this.tracerService.createSpan(
+      'getFnolMasterDataInternal',
+      parentSpanInst
+    );
+    let bh: any = {
+      input: {
+        masterDataResponse,
+      },
+      local: {},
+    };
+    try {
+      bh = this.sdService.__constructDefault(bh);
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.prepareMasterDataRequests(bh, parentSpanInst);
+      //appendnew_next_getFnolMasterDataInternal
+      return (
+        // formatting output variables
+        {
+          input: {
+            masterDataResponse: bh.input.masterDataResponse,
+          },
+          local: {},
+        }
+      );
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_TwPyl5c2xuiGMbUf',
+        spanInst,
+        'getFnolMasterDataInternal'
+      );
+    }
+  }
   //appendnew_flow_Claim_start
 
   async prepareClaimLookup(bh, parentSpanInst) {
@@ -569,16 +641,15 @@ export class Claim {
         bh.local.error = 'status is required';
       }
       bh.local.claimSql = `
-    SELECT
-        id,
-        claim_number,
-        status
+    SELECT *
     FROM public.claims
     WHERE id = $1
     LIMIT 1
 `;
 
       bh.local.claimSqlParams = [bh.local.claimId];
+      console.log('claimSql', bh.local.claimSql);
+      console.log('claimSqlParams', bh.local.claimSqlParams);
       this.tracerService.sendData(spanInst, bh);
       bh = await this.sd_UksgNe5d2MtSphDJ(bh, parentSpanInst);
       //appendnew_next_requestValidationScript
@@ -1042,7 +1113,7 @@ export class Claim {
       if (claimFound && claimUpdateSuccess && auditInsertSuccess) {
         bh.local.responseStatus = 200;
 
-        bh.local.response = {
+        bh.local.finalResponse = {
           success: true,
 
           message: 'Claim decision updated successfully.',
@@ -1068,7 +1139,7 @@ export class Claim {
       } else {
         bh.local.responseStatus = 500;
 
-        bh.local.response = {
+        bh.local.finalResponse = {
           success: false,
 
           message: 'Claim decision update failed.',
@@ -1099,14 +1170,14 @@ export class Claim {
 
       console.log(
         'Final response:',
-        JSON.stringify(bh.local.response, null, 2)
+        JSON.stringify(bh.local.finalResponse, null, 2)
       );
 
       console.log('Final response status:', bh.local.responseStatus);
 
       console.log('==================================================');
       this.tracerService.sendData(spanInst, bh);
-      await this.claimDecisionUpdateOut(bh, parentSpanInst);
+      bh = await this.sd_doW9UnKSoeJzah6a(bh, parentSpanInst);
       //appendnew_next_sd_h4DOQJf6U3qRKamD
       return bh;
     } catch (e) {
@@ -1120,9 +1191,642 @@ export class Claim {
     }
   }
 
+  async sd_doW9UnKSoeJzah6a(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'sd_doW9UnKSoeJzah6a',
+      parentSpanInst
+    );
+    try {
+      /* =========================================================
+   EMAIL SEND DECISION
+   BEFORE SWITCH NODE
+   ========================================================= */
+
+      console.log('========== EMAIL SEND DECISION ==========');
+
+      /* =========================================================
+   DEFAULT VALUES
+   ========================================================= */
+
+      bh.local.emailSend = false;
+
+      bh.local.emailRequired = false;
+
+      bh.local.emailFrom = 'maritdev2017@gmail.com';
+
+      bh.local.emailTo = '';
+
+      /* =========================================================
+   CLAIM FOUND
+   ========================================================= */
+
+      const claimFound =
+        bh.local.claimFound === true || bh.local.claimFound === 'true';
+
+      /* =========================================================
+   NORMALIZE CLAIM RESPONSE
+   ========================================================= */
+
+      let rows = bh.local.claimResponse;
+
+      if (Array.isArray(rows)) {
+        rows = rows;
+      } else if (rows && Array.isArray(rows.rows)) {
+        rows = rows.rows;
+      } else if (rows && Array.isArray(rows.payload)) {
+        rows = rows.payload;
+      } else if (rows && Array.isArray(rows.data)) {
+        rows = rows.data;
+      } else {
+        rows = [];
+      }
+
+      /* =========================================================
+   GET CLAIM RECORD
+   ========================================================= */
+
+      const claim = rows.length > 0 ? rows[0] : {};
+
+      /* =========================================================
+   GET PREFERRED CONTACT METHOD
+   ========================================================= */
+
+      const preferredContactMethod = (
+        claim.preferred_contact_method ||
+        claim.preferred_contact_mehod ||
+        claim.preferredContactMethod ||
+        ''
+      )
+        .toString()
+        .trim()
+        .toUpperCase();
+
+      /* =========================================================
+   GET PREFERRED CONTACT VALUE
+   ========================================================= */
+
+      const preferredContactValue = (
+        claim.preferred_contact_value ||
+        claim.preferredContactValue ||
+        ''
+      )
+        .toString()
+        .trim();
+
+      /* =========================================================
+   VALIDATE EMAIL FORMAT
+   ========================================================= */
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      const validEmail = emailPattern.test(preferredContactValue);
+
+      /* =========================================================
+   DEBUG INPUT
+   ========================================================= */
+
+      console.log('Claim Found:', claimFound);
+
+      console.log('Claim Records:', rows.length);
+
+      console.log('Claim Record:', claim);
+
+      console.log('Preferred Contact Method:', preferredContactMethod);
+
+      console.log('Preferred Contact Value:', preferredContactValue);
+
+      console.log('Valid Email:', validEmail);
+
+      /* =========================================================
+   EMAIL CONDITION
+   =========================================================
+   
+   Email should be sent ONLY when ALL conditions are true:
+
+   1. Claim exists
+   2. Claim record exists
+   3. Preferred Contact Method = EMAIL
+   4. Preferred Contact Value is not empty
+   5. Preferred Contact Value is a valid email
+   ========================================================= */
+
+      if (
+        claimFound === true &&
+        rows.length > 0 &&
+        preferredContactMethod === 'EMAIL' &&
+        preferredContactValue !== '' &&
+        validEmail === true
+      ) {
+        /* =====================================================
+       EMAIL REQUIRED
+       ===================================================== */
+
+        bh.local.emailSend = true;
+
+        bh.local.emailRequired = true;
+
+        bh.local.emailTo = preferredContactValue;
+
+        console.log('EMAIL CONDITION SATISFIED');
+
+        console.log('Email Send:', bh.local.emailSend);
+
+        console.log('Email To:', bh.local.emailTo);
+      } else {
+        /* =====================================================
+       EMAIL NOT REQUIRED
+       ===================================================== */
+
+        bh.local.emailSend = false;
+
+        bh.local.emailRequired = false;
+
+        bh.local.emailTo = '';
+
+        console.log('EMAIL CONDITION NOT SATISFIED');
+
+        console.log('Claim Found:', claimFound);
+
+        console.log('Records:', rows.length);
+
+        console.log('Preferred Contact Method:', preferredContactMethod);
+
+        console.log('Preferred Contact Value:', preferredContactValue);
+
+        console.log('Valid Email:', validEmail);
+      }
+
+      /* =========================================================
+   FINAL SWITCH VALUE
+   ========================================================= */
+
+      console.log('==========================================');
+
+      console.log('FINAL emailSend:', bh.local.emailSend);
+
+      console.log('FINAL emailRequired:', bh.local.emailRequired);
+
+      console.log('FINAL emailTo:', bh.local.emailTo);
+
+      console.log('==========================================');
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.sd_F8emBu429qPxtfm4(bh, parentSpanInst);
+      //appendnew_next_sd_doW9UnKSoeJzah6a
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_doW9UnKSoeJzah6a',
+        spanInst,
+        'sd_doW9UnKSoeJzah6a'
+      );
+    }
+  }
+
+  async sd_F8emBu429qPxtfm4(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'sd_F8emBu429qPxtfm4',
+      parentSpanInst
+    );
+    try {
+      if (
+        this.sdService.operators['true'](
+          bh.local.emailSend,
+          undefined,
+          undefined,
+          undefined
+        )
+      ) {
+        bh = await this.sd_q6oShd5OLWHQeteH(bh, parentSpanInst);
+      } else if (
+        this.sdService.operators['false'](
+          bh.local.emailSend,
+          undefined,
+          undefined,
+          undefined
+        )
+      ) {
+        bh = await this.claimDecisionUpdateOut(bh, parentSpanInst);
+      }
+      this.tracerService.sendData(spanInst, bh);
+
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_F8emBu429qPxtfm4',
+        spanInst,
+        'sd_F8emBu429qPxtfm4'
+      );
+    }
+  }
+
+  async sd_q6oShd5OLWHQeteH(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'sd_q6oShd5OLWHQeteH',
+      parentSpanInst
+    );
+    try {
+      /* =========================================================
+   PREPARE CLAIM DECISION EMAIL
+   SWITCH TRUE BRANCH
+   ========================================================= */
+
+      console.log('========== PREPARE CLAIM DECISION EMAIL ==========');
+
+      /* =========================================================
+   EMAIL CONFIGURATION
+   ========================================================= */
+
+      bh.local.emailFrom = 'maritdev2017@gmail.com';
+
+      bh.local.emailResult = {};
+
+      /* =========================================================
+   NORMALIZE CLAIM RESPONSE
+   ========================================================= */
+
+      let rows = bh.local.claimResponse;
+
+      if (Array.isArray(rows)) {
+        rows = rows;
+      } else if (rows && Array.isArray(rows.rows)) {
+        rows = rows.rows;
+      } else if (rows && Array.isArray(rows.payload)) {
+        rows = rows.payload;
+      } else if (rows && Array.isArray(rows.data)) {
+        rows = rows.data;
+      } else {
+        rows = [];
+      }
+
+      /* =========================================================
+   GET CLAIM
+   ========================================================= */
+
+      const claim = rows.length > 0 ? rows[0] : {};
+
+      /* =========================================================
+   CLAIM DETAILS
+   ========================================================= */
+
+      const claimId = claim.claim_id || claim.claimId || bh.local.claimId || '';
+
+      const claimNumber =
+        claim.claim_number || claim.claimNumber || bh.local.claimNumber || '';
+
+      const policyNumber = claim.policy_number || claim.policyNumber || '';
+
+      const claimantType = claim.claimant_type || claim.claimantType || '';
+
+      const lossType = claim.loss_type || claim.lossType || '';
+
+      const lossLocation = claim.loss_location || claim.lossLocation || '';
+
+      const lossDate = claim.loss_date_time
+        ? claim.loss_date_time instanceof Date
+          ? claim.loss_date_time.toISOString().split('T')[0]
+          : claim.loss_date_time.toString().substring(0, 10)
+        : '';
+
+      const lossDescription =
+        claim.loss_description || claim.lossDescription || '';
+
+      const estimatedAmount =
+        claim.estimated_amount ||
+        claim.estimated_loss_amount ||
+        claim.estimatedLossAmount ||
+        '';
+
+      const driverName = claim.driver_name || claim.driverName || '';
+
+      const vehicleRegistration =
+        claim.vehicle_registration || claim.vehicleRegistration || '';
+
+      const vehicleMake = claim.vehicle_make || claim.vehicleMake || '';
+
+      const vehicleModel = claim.vehicle_model || claim.vehicleModel || '';
+
+      /* =========================================================
+   DECISION DETAILS
+   ========================================================= */
+
+      const decision = bh.local.decision || claim.decision || '';
+
+      const status = bh.local.status || claim.status || '';
+
+      const oldStatus = bh.local.oldStatus || claim.old_status || '';
+
+      const newStatus =
+        bh.local.status || claim.new_status || claim.status || '';
+
+      /* =========================================================
+   AUDIT DETAILS
+   ========================================================= */
+
+      const correlationId =
+        bh.local.correlationId ||
+        claim.correlation_id ||
+        claim.correlationId ||
+        '';
+
+      const auditRecorded =
+        bh.local.auditInsertSuccess === true ||
+        bh.local.auditInsertSuccess === 'true';
+
+      /* =========================================================
+   EMAIL TO
+   ========================================================= */
+
+      bh.local.emailTo =
+        claim.preferred_contact_value ||
+        claim.preferredContactValue ||
+        bh.local.emailTo ||
+        '';
+
+      /* =========================================================
+   SUBJECT
+   ========================================================= */
+
+      bh.local.emailSubject =
+        'FNOL Claim Decision - ' + (claimNumber || claimId);
+
+      /* =========================================================
+   PLAIN TEXT BODY
+   ========================================================= */
+
+      bh.local.emailBody =
+        'Hello,\n\n' +
+        'Your insurance claim decision has been updated.\n\n' +
+        'CLAIM DETAILS\n' +
+        '--------------\n' +
+        'Claim ID: ' +
+        (claimId || 'N/A') +
+        '\n' +
+        'Claim Number: ' +
+        (claimNumber || 'N/A') +
+        '\n' +
+        // "Policy Number: " +
+        // (policyNumber || "N/A") +
+        // "\n" +
+
+        'Claimant Type: ' +
+        (claimantType || 'N/A') +
+        '\n' +
+        'Loss Type: ' +
+        (lossType || 'N/A') +
+        '\n' +
+        'Loss Location: ' +
+        (lossLocation || 'N/A') +
+        '\n' +
+        'Loss Date: ' +
+        (lossDate || 'N/A') +
+        '\n' +
+        'Loss Description: ' +
+        (lossDescription || 'N/A') +
+        '\n' +
+        'Estimated Loss Amount: ' +
+        (estimatedAmount || 'N/A') +
+        '\n' +
+        'Driver Name: ' +
+        (driverName || 'N/A') +
+        '\n' +
+        'Vehicle Registration: ' +
+        (vehicleRegistration || 'N/A') +
+        '\n' +
+        'Vehicle: ' +
+        ([vehicleMake, vehicleModel]
+          .filter(function (v) {
+            return v !== null && v !== undefined && v !== '';
+          })
+          .join(' ') || 'N/A') +
+        '\n\n' +
+        'CLAIM DECISION\n' +
+        '--------------\n' +
+        'Decision: ' +
+        (decision || 'N/A') +
+        '\n' +
+        'Previous Status: ' +
+        (oldStatus || 'N/A') +
+        '\n' +
+        'New Status: ' +
+        (newStatus || status || 'N/A') +
+        '\n\n' +
+        'AUDIT INFORMATION\n' +
+        '------------------\n' +
+        'Audit Recorded: ' +
+        (auditRecorded ? 'Yes' : 'No') +
+        '\n' +
+        'Correlation ID: ' +
+        (correlationId || 'N/A') +
+        '\n\n' +
+        'This notification was generated automatically by the ' +
+        'Insurance Claims FNOL POC.\n\n' +
+        'Regards,\n' +
+        'Insurance Claims POC Team';
+
+      /* =========================================================
+   HTML BODY
+   ========================================================= */
+
+      bh.local.emailHtml =
+        '<html>' +
+        '<body style="font-family: Arial, sans-serif;">' +
+        '<h2>Insurance Claims FNOL POC</h2>' +
+        '<p>' +
+        'Your insurance claim decision has been updated.' +
+        '</p>' +
+        '<h3>Claim Details</h3>' +
+        '<table border="1" cellpadding="8" cellspacing="0">' +
+        '<tr>' +
+        '<td><b>Claim ID</b></td>' +
+        '<td>' +
+        (claimId || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Claim Number</b></td>' +
+        '<td>' +
+        (claimNumber || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Policy Number</b></td>' +
+        '<td>' +
+        (policyNumber || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Claimant Type</b></td>' +
+        '<td>' +
+        (claimantType || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Loss Type</b></td>' +
+        '<td>' +
+        (lossType || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Loss Location</b></td>' +
+        '<td>' +
+        (lossLocation || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Loss Date</b></td>' +
+        '<td>' +
+        (lossDate || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Estimated Loss Amount</b></td>' +
+        '<td>' +
+        (estimatedAmount || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<h3>Claim Decision</h3>' +
+        '<table border="1" cellpadding="8" cellspacing="0">' +
+        '<tr>' +
+        '<td><b>Decision</b></td>' +
+        '<td>' +
+        (decision || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Previous Status</b></td>' +
+        '<td>' +
+        (oldStatus || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>New Status</b></td>' +
+        '<td>' +
+        (newStatus || status || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<h3>Audit Information</h3>' +
+        '<table border="1" cellpadding="8" cellspacing="0">' +
+        '<tr>' +
+        '<td><b>Audit Recorded</b></td>' +
+        '<td>' +
+        (auditRecorded ? 'Yes' : 'No') +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td><b>Correlation ID</b></td>' +
+        '<td>' +
+        (correlationId || 'N/A') +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<br>' +
+        '<p>' +
+        'This notification was generated automatically by the ' +
+        'Insurance Claims FNOL POC.' +
+        '</p>' +
+        '<p>' +
+        'Regards,<br>' +
+        'Insurance Claims POC Team' +
+        '</p>' +
+        '</body>' +
+        '</html>';
+
+      /* =========================================================
+   DEBUG
+   ========================================================= */
+
+      console.log('========== EMAIL READY ==========');
+
+      console.log('Email Send:', bh.local.emailSend);
+
+      console.log('Email From:', bh.local.emailFrom);
+
+      console.log('Email To:', bh.local.emailTo);
+
+      console.log('Email Subject:', bh.local.emailSubject);
+
+      console.log('=================================');
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.sd_vUzFQ4a5kuTp1Hzq(bh, parentSpanInst);
+      //appendnew_next_sd_q6oShd5OLWHQeteH
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_q6oShd5OLWHQeteH',
+        spanInst,
+        'sd_q6oShd5OLWHQeteH'
+      );
+    }
+  }
+
+  async sd_vUzFQ4a5kuTp1Hzq(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'sd_vUzFQ4a5kuTp1Hzq',
+      parentSpanInst
+    );
+    try {
+      let mailConfigObj = this.sdService.getConfigObj(
+        'emailout-config',
+        'sd_Tx8xifuCc5sWAFFF'
+      );
+      let server = mailConfigObj.server;
+      let port = mailConfigObj.port;
+      let secure = mailConfigObj.secure;
+      let tls = mailConfigObj.tls;
+      let userid = mailConfigObj.userid;
+      let password = mailConfigObj.password;
+      let emailServiceInstance = EmailOutService.getInstance();
+      bh.local.emailResult = await emailServiceInstance.sendEmail(
+        {
+          server,
+          port,
+          secure,
+          tls,
+        },
+        {
+          userid,
+          password,
+          to: bh.local.emailTo,
+          subject: bh.local.emailSubject,
+          body: bh.local.emailBody,
+          cc: undefined,
+          bcc: undefined,
+          from: bh.local.emailFrom,
+          html: bh.local.emailHtml,
+          iCal: undefined,
+          routingOptions: undefined,
+          contentOptions: undefined,
+          securityOptions: undefined,
+          headerOptions: undefined,
+          attachments: [],
+        }
+      );
+      this.tracerService.sendData(spanInst, bh);
+      await this.claimDecisionUpdateOut(bh, parentSpanInst);
+      //appendnew_next_sd_vUzFQ4a5kuTp1Hzq
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_vUzFQ4a5kuTp1Hzq',
+        spanInst,
+        'sd_vUzFQ4a5kuTp1Hzq'
+      );
+    }
+  }
+
   async claimDecisionUpdateOut(bh, parentSpanInst) {
     try {
-      bh.web.res.status(bh.local.responseStatus).send(bh.local.response);
+      bh.web.res.status(bh.local.responseStatus).send(bh.local.finalResponse);
 
       return bh;
     } catch (e) {
@@ -2347,10 +3051,27 @@ export class Claim {
     );
     try {
       /* =========================================================
-   CASE CREATION RESPONSE
-   ========================================================= */
+       * CASE CREATION RESPONSE
+       * ========================================================= */
+
+      /* ---------------------------------------------------------
+       * Default HTTP response status
+       *
+       * Always set this so the final response never receives
+       * an undefined HTTP status code.
+       * --------------------------------------------------------- */
+
+      bh.local.responseStatus = 200;
+
+      /* ---------------------------------------------------------
+       * Get raw case creation response
+       * --------------------------------------------------------- */
 
       const rawCaseResponse = bh.local.caseCreationResponse || {};
+
+      /* ---------------------------------------------------------
+       * Normalize payload
+       * --------------------------------------------------------- */
 
       const caseResponse =
         rawCaseResponse &&
@@ -2359,11 +3080,15 @@ export class Claim {
           ? rawCaseResponse.payload
           : rawCaseResponse;
 
+      /* ---------------------------------------------------------
+       * Store normalized response
+       * --------------------------------------------------------- */
+
       bh.local.caseCreationResponse = caseResponse;
 
       /* =========================================================
-   EXTRACT CASE ID
-   ========================================================= */
+       * EXTRACT CASE ID
+       * ========================================================= */
 
       bh.local.caseId =
         caseResponse.caseId ||
@@ -2376,8 +3101,8 @@ export class Claim {
         null;
 
       /* =========================================================
-   DETERMINE SUCCESS
-   ========================================================= */
+       * DETERMINE SUCCESS
+       * ========================================================= */
 
       bh.local.caseCreated = !!(
         bh.local.caseId ||
@@ -2385,13 +3110,45 @@ export class Claim {
         caseResponse.status === 'SUCCESS'
       );
 
+      /* =========================================================
+       * DETERMINE RESPONSE STATUS
+       * ========================================================= */
+
+      if (bh.local.caseCreated) {
+        bh.local.responseStatus = 200;
+      } else {
+        bh.local.responseStatus = 500;
+      }
+
+      /* =========================================================
+       * FINAL RESPONSE BODY
+       * ========================================================= */
+
+      bh.local.response = caseResponse;
+
+      /* =========================================================
+       * DEBUG
+       * ========================================================= */
+
       console.log('========== CASE CREATION RESPONSE ==========');
 
-      console.log(JSON.stringify(caseResponse, null, 2));
+      console.log(
+        'Raw Case Response:',
+        JSON.stringify(rawCaseResponse, null, 2)
+      );
+
+      console.log(
+        'Normalized Case Response:',
+        JSON.stringify(caseResponse, null, 2)
+      );
 
       console.log('Case ID:', bh.local.caseId);
 
       console.log('Case Created:', bh.local.caseCreated);
+
+      console.log('Response Status:', bh.local.responseStatus);
+
+      console.log('Response Body:', JSON.stringify(bh.local.response, null, 2));
 
       console.log('=============================================');
       this.tracerService.sendData(spanInst, bh);
@@ -2451,6 +3208,418 @@ export class Claim {
         spanInst,
         'prepareDmsUpload'
       );
+    }
+  }
+
+  async prepareMasterDataRequests(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'prepareMasterDataRequests',
+      parentSpanInst
+    );
+    try {
+      const BASE_URL = bh.system.environment.REELS_BASE_URL;
+
+      const TOKEN = bh.system.environment.REELS_TOKEN;
+
+      /*
+       * Replace the placeholder UUIDs below with your actual
+       * Dataset ID / Master Data ID / Entity ID values.
+       */
+
+      const CLAIMANT_TYPE_DATASET_ID = '72b58c39-817f-4204-95dc-4f5eec8fd929';
+      const CLAIMANT_TYPE_MDM_ID = 'b34e9a23-b442-488c-982c-e14f525a19ae';
+      const CLAIMANT_TYPE_ENTITY_ID = '4383405d-0c7a-4d9e-a182-c41481948f8a';
+
+      const LOSS_TYPE_DATASET_ID = '72b58c39-817f-4204-95dc-4f5eec8fd929';
+      const LOSS_TYPE_MDM_ID = '08bc2d6f-8ef9-4349-8c8c-40565944b1cd';
+      const LOSS_TYPE_ENTITY_ID = '940c5c81-27fb-49f2-bb53-6b821dac3730';
+
+      const LOSS_LOCATION_DATASET_ID = '72b58c39-817f-4204-95dc-4f5eec8fd929';
+      const LOSS_LOCATION_MDM_ID = 'c1c987a9-96b8-4507-9948-26287cc55742';
+      const LOSS_LOCATION_ENTITY_ID = 'f4463407-3922-4e25-8cc6-7b6569f1f37f';
+
+      const DRIVER_LICENCE_DATASET_ID = '72b58c39-817f-4204-95dc-4f5eec8fd929';
+      const DRIVER_LICENCE_MDM_ID = 'aec9808b-6c3a-43e4-a7e2-232699894119';
+      const DRIVER_LICENCE_ENTITY_ID = '832e08aa-e9f7-454f-b8a1-8a600c64dc41';
+
+      const buildUrl = (datasetId, mdmId, entityId) =>
+        `${BASE_URL}/integration/api/records/filter/${datasetId}/${mdmId}/${entityId}`;
+
+      bh.local.headers = {
+        token: TOKEN,
+        'Content-Type': 'application/json',
+      };
+
+      bh.local.requestBody = {
+        pageNumber: 0,
+        pageSize: 100,
+        filter: {},
+        multiplicity: 'multiple',
+        totalCount: true,
+      };
+
+      bh.local.claimantTypeUrl = buildUrl(
+        CLAIMANT_TYPE_DATASET_ID,
+        CLAIMANT_TYPE_MDM_ID,
+        CLAIMANT_TYPE_ENTITY_ID
+      );
+
+      bh.local.lossTypeUrl = buildUrl(
+        LOSS_TYPE_DATASET_ID,
+        LOSS_TYPE_MDM_ID,
+        LOSS_TYPE_ENTITY_ID
+      );
+
+      bh.local.lossLocationUrl = buildUrl(
+        LOSS_LOCATION_DATASET_ID,
+        LOSS_LOCATION_MDM_ID,
+        LOSS_LOCATION_ENTITY_ID
+      );
+
+      bh.local.driverLicenceStatusUrl = buildUrl(
+        DRIVER_LICENCE_DATASET_ID,
+        DRIVER_LICENCE_MDM_ID,
+        DRIVER_LICENCE_ENTITY_ID
+      );
+
+      console.log('FNOL master-data URLs prepared');
+      console.log('claimantType:', bh.local.claimantTypeUrl);
+      console.log('lossType:', bh.local.lossTypeUrl);
+      console.log('lossLocation:', bh.local.lossLocationUrl);
+      console.log('driverLicenceStatus:', bh.local.driverLicenceStatusUrl);
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.getClaimantTypes(bh, parentSpanInst);
+      //appendnew_next_prepareMasterDataRequests
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_4A7Hlcc9SxtkN3nW',
+        spanInst,
+        'prepareMasterDataRequests'
+      );
+    }
+  }
+
+  async getClaimantTypes(bh, parentSpanInst) {
+    try {
+      let requestOptions: any = {
+        url: bh.local.claimantTypeUrl,
+        timeout: 30000,
+        method: 'post',
+        headers: bh.local.headers,
+        followRedirects: true,
+        cookies: undefined,
+        authType: undefined,
+        body: bh.local.requestBody,
+        paytoqs: false,
+        proxyConfig: undefined,
+        tlsConfig: undefined,
+        ret: 'json',
+        params: {},
+        username: undefined,
+        password: undefined,
+        token: undefined,
+        useQuerystring: false,
+      };
+      requestOptions.rejectUnauthorized = false;
+      requestOptions.tlsConfig = undefined;
+      requestOptions.proxyConfig = undefined;
+      let responseMsg: any = await this.sdService.httpRequest(
+        requestOptions.url,
+        requestOptions.timeout,
+        requestOptions.method,
+        requestOptions.headers,
+        requestOptions.followRedirects,
+        requestOptions.cookies,
+        requestOptions.authType,
+        requestOptions.body,
+        requestOptions.paytoqs,
+        requestOptions.proxyConfig,
+        requestOptions.tlsConfig,
+        requestOptions.ret,
+        requestOptions.params,
+        requestOptions.rejectUnauthorized,
+        requestOptions.username,
+        requestOptions.password,
+        requestOptions.token
+      );
+
+      bh.local.claimantTypeResponse = responseMsg;
+      bh = await this.getLossTypes(bh, parentSpanInst);
+      //appendnew_next_getClaimantTypes
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(bh, e, 'sd_nLILRrSSk2kw2YW6');
+    }
+  }
+
+  async getLossTypes(bh, parentSpanInst) {
+    try {
+      let requestOptions: any = {
+        url: bh.local.lossTypeUrl,
+        timeout: 30000,
+        method: 'post',
+        headers: bh.local.headers,
+        followRedirects: true,
+        cookies: {},
+        authType: undefined,
+        body: bh.local.requestBody,
+        paytoqs: false,
+        proxyConfig: undefined,
+        tlsConfig: undefined,
+        ret: 'json',
+        params: {},
+        username: undefined,
+        password: undefined,
+        token: undefined,
+        useQuerystring: false,
+      };
+      requestOptions.rejectUnauthorized = false;
+      requestOptions.tlsConfig = undefined;
+      requestOptions.proxyConfig = undefined;
+      let responseMsg: any = await this.sdService.httpRequest(
+        requestOptions.url,
+        requestOptions.timeout,
+        requestOptions.method,
+        requestOptions.headers,
+        requestOptions.followRedirects,
+        requestOptions.cookies,
+        requestOptions.authType,
+        requestOptions.body,
+        requestOptions.paytoqs,
+        requestOptions.proxyConfig,
+        requestOptions.tlsConfig,
+        requestOptions.ret,
+        requestOptions.params,
+        requestOptions.rejectUnauthorized,
+        requestOptions.username,
+        requestOptions.password,
+        requestOptions.token
+      );
+
+      bh.local.lossTypeResponse = responseMsg;
+      bh = await this.getLossLocations(bh, parentSpanInst);
+      //appendnew_next_getLossTypes
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(bh, e, 'sd_CG2yZHdDLqv84cXw');
+    }
+  }
+
+  async getLossLocations(bh, parentSpanInst) {
+    try {
+      let requestOptions: any = {
+        url: bh.local.lossLocationUrl,
+        timeout: 30000,
+        method: 'post',
+        headers: bh.local.headers,
+        followRedirects: true,
+        cookies: {},
+        authType: undefined,
+        body: bh.local.requestBody,
+        paytoqs: false,
+        proxyConfig: undefined,
+        tlsConfig: undefined,
+        ret: 'json',
+        params: {},
+        username: undefined,
+        password: undefined,
+        token: undefined,
+        useQuerystring: false,
+      };
+      requestOptions.rejectUnauthorized = false;
+      requestOptions.tlsConfig = undefined;
+      requestOptions.proxyConfig = undefined;
+      let responseMsg: any = await this.sdService.httpRequest(
+        requestOptions.url,
+        requestOptions.timeout,
+        requestOptions.method,
+        requestOptions.headers,
+        requestOptions.followRedirects,
+        requestOptions.cookies,
+        requestOptions.authType,
+        requestOptions.body,
+        requestOptions.paytoqs,
+        requestOptions.proxyConfig,
+        requestOptions.tlsConfig,
+        requestOptions.ret,
+        requestOptions.params,
+        requestOptions.rejectUnauthorized,
+        requestOptions.username,
+        requestOptions.password,
+        requestOptions.token
+      );
+
+      bh.local.lossLocationResponse = responseMsg;
+      bh = await this.getDriverLicenceStatuses(bh, parentSpanInst);
+      //appendnew_next_getLossLocations
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(bh, e, 'sd_WcPFwmhxmfLWzX2U');
+    }
+  }
+
+  async getDriverLicenceStatuses(bh, parentSpanInst) {
+    try {
+      let requestOptions: any = {
+        url: bh.local.driverLicenceStatusUrl,
+        timeout: 30000,
+        method: 'post',
+        headers: bh.local.headers,
+        followRedirects: true,
+        cookies: {},
+        authType: undefined,
+        body: bh.local.requestBody,
+        paytoqs: false,
+        proxyConfig: undefined,
+        tlsConfig: undefined,
+        ret: 'json',
+        params: {},
+        username: undefined,
+        password: undefined,
+        token: undefined,
+        useQuerystring: false,
+      };
+      requestOptions.rejectUnauthorized = false;
+      requestOptions.tlsConfig = undefined;
+      requestOptions.proxyConfig = undefined;
+      let responseMsg: any = await this.sdService.httpRequest(
+        requestOptions.url,
+        requestOptions.timeout,
+        requestOptions.method,
+        requestOptions.headers,
+        requestOptions.followRedirects,
+        requestOptions.cookies,
+        requestOptions.authType,
+        requestOptions.body,
+        requestOptions.paytoqs,
+        requestOptions.proxyConfig,
+        requestOptions.tlsConfig,
+        requestOptions.ret,
+        requestOptions.params,
+        requestOptions.rejectUnauthorized,
+        requestOptions.username,
+        requestOptions.password,
+        requestOptions.token
+      );
+
+      bh.local.driverLicenceStatusResponse = responseMsg;
+      bh = await this.buildFnolMasterDataResponse(bh, parentSpanInst);
+      //appendnew_next_getDriverLicenceStatuses
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(bh, e, 'sd_Ehc09P32x7asFH3y');
+    }
+  }
+
+  async buildFnolMasterDataResponse(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'buildFnolMasterDataResponse',
+      parentSpanInst
+    );
+    try {
+      const getRecords = (response) =>
+        response?.payload?.records || response?.records || [];
+
+      bh.local.masterDataResponse = {
+        claimantTypes: getRecords(bh.local.claimantTypeResponse),
+        lossTypes: getRecords(bh.local.lossTypeResponse),
+        lossLocations: getRecords(bh.local.lossLocationResponse),
+        driverLicenceStatuses: getRecords(bh.local.driverLicenceStatusResponse),
+      };
+
+      console.log(
+        'FNOL Master Data Response:',
+        JSON.stringify(bh.local.masterDataResponse, null, 2)
+      );
+
+      bh.input.masterDataResponse = bh.local.masterDataResponse;
+      this.tracerService.sendData(spanInst, bh);
+      //appendnew_next_buildFnolMasterDataResponse
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_QsPcWRDbaZJKbX8F',
+        spanInst,
+        'buildFnolMasterDataResponse'
+      );
+    }
+  }
+
+  async getFnolMasterDataCallService(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'getFnolMasterDataCallService',
+      parentSpanInst
+    );
+    try {
+      let outputVariables = await this.getFnolMasterDataInternal(
+        spanInst,
+        undefined
+      );
+      bh.local.masterDataResponse = outputVariables.input.masterDataResponse;
+
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.prepareMasterDataHttpResponse(bh, parentSpanInst);
+      //appendnew_next_getFnolMasterDataCallService
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_Ih7aPP8kUjrizPoY',
+        spanInst,
+        'getFnolMasterDataCallService'
+      );
+    }
+  }
+
+  async prepareMasterDataHttpResponse(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'prepareMasterDataHttpResponse',
+      parentSpanInst
+    );
+    try {
+      bh.local.masterResponse = {
+        success: true,
+        message: 'FNOL master data fetched successfully',
+        data: bh.local.masterDataResponse || {
+          claimantTypes: [],
+          lossTypes: [],
+          lossLocations: [],
+          driverLicenceStatuses: [],
+        },
+      };
+
+      console.log(
+        'Master Data HTTP Response:',
+        JSON.stringify(bh.local.masterResponse, null, 2)
+      );
+      this.tracerService.sendData(spanInst, bh);
+      await this.fnolMasterDataHttpOut(bh, parentSpanInst);
+      //appendnew_next_prepareMasterDataHttpResponse
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_cMTwfQfQPdaYn6Mi',
+        spanInst,
+        'prepareMasterDataHttpResponse'
+      );
+    }
+  }
+
+  async fnolMasterDataHttpOut(bh, parentSpanInst) {
+    try {
+      bh.web.res.status(200).send(bh.local.masterResponse);
+
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(bh, e, 'sd_b7SFQ05T4nkeKxxo');
     }
   }
 

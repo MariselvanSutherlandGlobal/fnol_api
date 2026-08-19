@@ -471,7 +471,7 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "Request validation Script",
-        "script": "const body = bh.input.body || {};\n\nbh.local.claimId = Number(body.claimId || 0);\nbh.local.decision = String(body.decision || \"\").trim();\nbh.local.status = String(body.status || \"\").trim();\nbh.local.decisionSource =\n    String(body.decisionSource || \"BPM\").trim();\nbh.local.decisionRole =\n    String(body.decisionRole || \"SYSTEM\").trim();\nbh.local.comments =\n    String(body.comments || \"\").trim();\nbh.local.correlationId =\n    String(body.correlationId || \"\").trim();\n\nbh.local.valid = true;\nbh.local.error = \"\";\n\nif (!bh.local.claimId) {\n    bh.local.valid = false;\n    bh.local.error = \"claimId is required\";\n}\n\nif (!bh.local.decision) {\n    bh.local.valid = false;\n    bh.local.error = \"decision is required\";\n}\n\nif (!bh.local.status) {\n    bh.local.valid = false;\n    bh.local.error = \"status is required\";\n}\nbh.local.claimSql = `\n    SELECT\n        id,\n        claim_number,\n        status\n    FROM public.claims\n    WHERE id = $1\n    LIMIT 1\n`;\n\nbh.local.claimSqlParams = [\n    bh.local.claimId\n];",
+        "script": "const body = bh.input.body || {};\n\nbh.local.claimId = Number(body.claimId || 0);\nbh.local.decision = String(body.decision || \"\").trim();\nbh.local.status = String(body.status || \"\").trim();\nbh.local.decisionSource =\n    String(body.decisionSource || \"BPM\").trim();\nbh.local.decisionRole =\n    String(body.decisionRole || \"SYSTEM\").trim();\nbh.local.comments =\n    String(body.comments || \"\").trim();\nbh.local.correlationId =\n    String(body.correlationId || \"\").trim();\n\nbh.local.valid = true;\nbh.local.error = \"\";\n\nif (!bh.local.claimId) {\n    bh.local.valid = false;\n    bh.local.error = \"claimId is required\";\n}\n\nif (!bh.local.decision) {\n    bh.local.valid = false;\n    bh.local.error = \"decision is required\";\n}\n\nif (!bh.local.status) {\n    bh.local.valid = false;\n    bh.local.error = \"status is required\";\n}\nbh.local.claimSql = `\n    SELECT *\n    FROM public.claims\n    WHERE id = $1\n    LIMIT 1\n`;\n\nbh.local.claimSqlParams = [\n    bh.local.claimId\n];\nconsole.log('claimSql',bh.local.claimSql);\nconsole.log('claimSqlParams',bh.local.claimSqlParams);",
         "functionName": "requestValidationScript",
         "category": "Function",
         "x": 545,
@@ -588,14 +588,14 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "",
-        "script": "/* =========================================================\n   AUDIT INSERT SUCCESS\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM AUDIT ==========\"\n);\n\nconsole.log(\n    \"Audit SQL:\",\n    bh.local.auditSql\n);\n\nconsole.log(\n    \"Claim ID:\",\n    bh.local.claimId\n);\n\nconsole.log(\n    \"Correlation ID:\",\n    bh.local.correlationId\n);\n\n\n/*\n * SQL node completed without throwing an error.\n * Therefore audit INSERT was successful.\n */\n\nbh.local.auditInsertSuccess = true;\n\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\nconsole.log(\n    \"=================================\"\n);\n/* =========================================================\n   FINAL CLAIM DECISION RESPONSE\n   ========================================================= */\n\nconsole.log(\"========== FINAL CLAIM DECISION RESPONSE ==========\");\n\nconsole.log(\n    \"claimFound:\",\n    bh.local.claimFound\n);\n\nconsole.log(\n    \"claimUpdateSuccess:\",\n    bh.local.claimUpdateSuccess\n);\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\n\n/* =========================================================\n   NORMALIZE SUCCESS FLAGS\n   ========================================================= */\n\nconst claimFound =\n    bh.local.claimFound === true ||\n    bh.local.claimFound === \"true\";\n\nconst claimUpdateSuccess =\n    bh.local.claimUpdateSuccess === true ||\n    bh.local.claimUpdateSuccess === \"true\";\n\nconst auditInsertSuccess =\n    bh.local.auditInsertSuccess === true ||\n    bh.local.auditInsertSuccess === \"true\";\n\n\n/* =========================================================\n   FINAL SUCCESS\n   ========================================================= */\n\nif (\n    claimFound &&\n    claimUpdateSuccess &&\n    auditInsertSuccess\n) {\n\n    bh.local.responseStatus = 200;\n\n    bh.local.response = {\n\n        success: true,\n\n        message:\n            \"Claim decision updated successfully.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        oldStatus:\n            bh.local.oldStatus || \"\",\n\n        newStatus:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            true,\n\n        correlationId:\n            bh.local.correlationId || \"\"\n    };\n\n    console.log(\n        \"CLAIM DECISION SUCCESS\"\n    );\n\n} else {\n\n    bh.local.responseStatus = 500;\n\n    bh.local.response = {\n\n        success: false,\n\n        message:\n            \"Claim decision update failed.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            auditInsertSuccess,\n\n        correlationId:\n            bh.local.correlationId || \"\",\n\n        details: {\n\n            claimFound:\n                claimFound,\n\n            claimUpdateSuccess:\n                claimUpdateSuccess,\n\n            auditInsertSuccess:\n                auditInsertSuccess\n        }\n    };\n\n    console.error(\n        \"CLAIM DECISION FAILED\"\n    );\n}\n\n\nconsole.log(\n    \"Final response:\",\n    JSON.stringify(\n        bh.local.response,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Final response status:\",\n    bh.local.responseStatus\n);\n\nconsole.log(\n    \"==================================================\"\n);",
+        "script": "/* =========================================================\n   AUDIT INSERT SUCCESS\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM AUDIT ==========\"\n);\n\nconsole.log(\n    \"Audit SQL:\",\n    bh.local.auditSql\n);\n\nconsole.log(\n    \"Claim ID:\",\n    bh.local.claimId\n);\n\nconsole.log(\n    \"Correlation ID:\",\n    bh.local.correlationId\n);\n\n\n/*\n * SQL node completed without throwing an error.\n * Therefore audit INSERT was successful.\n */\n\nbh.local.auditInsertSuccess = true;\n\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\nconsole.log(\n    \"=================================\"\n);\n/* =========================================================\n   FINAL CLAIM DECISION RESPONSE\n   ========================================================= */\n\nconsole.log(\"========== FINAL CLAIM DECISION RESPONSE ==========\");\n\nconsole.log(\n    \"claimFound:\",\n    bh.local.claimFound\n);\n\nconsole.log(\n    \"claimUpdateSuccess:\",\n    bh.local.claimUpdateSuccess\n);\n\nconsole.log(\n    \"auditInsertSuccess:\",\n    bh.local.auditInsertSuccess\n);\n\n\n/* =========================================================\n   NORMALIZE SUCCESS FLAGS\n   ========================================================= */\n\nconst claimFound =\n    bh.local.claimFound === true ||\n    bh.local.claimFound === \"true\";\n\nconst claimUpdateSuccess =\n    bh.local.claimUpdateSuccess === true ||\n    bh.local.claimUpdateSuccess === \"true\";\n\nconst auditInsertSuccess =\n    bh.local.auditInsertSuccess === true ||\n    bh.local.auditInsertSuccess === \"true\";\n\n\n/* =========================================================\n   FINAL SUCCESS\n   ========================================================= */\n\nif (\n    claimFound &&\n    claimUpdateSuccess &&\n    auditInsertSuccess\n) {\n\n    bh.local.responseStatus = 200;\n\n    bh.local.finalResponse = {\n\n        success: true,\n\n        message:\n            \"Claim decision updated successfully.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        oldStatus:\n            bh.local.oldStatus || \"\",\n\n        newStatus:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            true,\n\n        correlationId:\n            bh.local.correlationId || \"\"\n    };\n\n    console.log(\n        \"CLAIM DECISION SUCCESS\"\n    );\n\n} else {\n\n    bh.local.responseStatus = 500;\n\n    bh.local.finalResponse = {\n\n        success: false,\n\n        message:\n            \"Claim decision update failed.\",\n\n        claimId:\n            Number(bh.local.claimId),\n\n        claimNumber:\n            bh.local.claimNumber || \"\",\n\n        decision:\n            bh.local.decision || \"\",\n\n        status:\n            bh.local.status || \"\",\n\n        auditRecorded:\n            auditInsertSuccess,\n\n        correlationId:\n            bh.local.correlationId || \"\",\n\n        details: {\n\n            claimFound:\n                claimFound,\n\n            claimUpdateSuccess:\n                claimUpdateSuccess,\n\n            auditInsertSuccess:\n                auditInsertSuccess\n        }\n    };\n\n    console.error(\n        \"CLAIM DECISION FAILED\"\n    );\n}\n\n\nconsole.log(\n    \"Final response:\",\n    JSON.stringify(\n        bh.local.finalResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Final response status:\",\n    bh.local.responseStatus\n);\n\nconsole.log(\n    \"==================================================\"\n);",
         "functionName": "sd_h4DOQJf6U3qRKamD",
         "category": "Function",
-        "x": 1625,
+        "x": 1585,
         "y": 680,
         "wires": [
             [
-                "sd_7ZQ8LohFIJNdoMqV"
+                "sd_doW9UnKSoeJzah6a"
             ]
         ],
         "__n_excludedFromValidation__": {},
@@ -613,7 +613,7 @@
         "headers": {},
         "responseBody": {
             "type": "bh.local",
-            "value": "response",
+            "value": "finalResponse",
             "ssd_typedInputField": true
         },
         "httpcode": {
@@ -625,11 +625,10 @@
         "swaggerResponse": {},
         "responseMapping": {
             "status": "bh.local.responseStatus",
-            "obj": "bh.local.response",
-            "send": "bh.local.response"
+            "obj": "bh.local.finalResponse",
+            "send": "bh.local.finalResponse"
         },
         "dataModelIsArray": false,
-        "cookies": [],
         "inputs": 1,
         "outputs": 0,
         "erd": "",
@@ -648,7 +647,7 @@
         },
         "functionName": "claimDecisionUpdateOut",
         "category": "HTTP",
-        "x": 1765,
+        "x": 2165,
         "y": 680,
         "wires": [],
         "__n_excludedFromValidation__": {},
@@ -801,7 +800,6 @@
         "acceptFileUpload": false,
         "useDataModel": false,
         "dataModelIsArray": false,
-        "uploadFileOptions": "",
         "erd": "",
         "erdName": "",
         "entity": "",
@@ -1399,7 +1397,7 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "Final Response Script",
-        "script": "/* =========================================================\n   CASE CREATION RESPONSE\n   ========================================================= */\n\nconst rawCaseResponse =\n    bh.local.caseCreationResponse || {};\n\n\nconst caseResponse =\n    rawCaseResponse &&\n    rawCaseResponse.payload &&\n    typeof rawCaseResponse.payload === \"object\"\n        ? rawCaseResponse.payload\n        : rawCaseResponse;\n\n\nbh.local.caseCreationResponse =\n    caseResponse;\n\n\n/* =========================================================\n   EXTRACT CASE ID\n   ========================================================= */\n\nbh.local.caseId =\n    caseResponse.caseId ||\n    caseResponse.id ||\n    caseResponse.caseInstanceId ||\n    (\n        caseResponse.case &&\n        (\n            caseResponse.case.caseId ||\n            caseResponse.case.id ||\n            caseResponse.case.caseInstanceId\n        )\n    ) ||\n    null;\n\n\n/* =========================================================\n   DETERMINE SUCCESS\n   ========================================================= */\n\nbh.local.caseCreated =\n    !!(\n        bh.local.caseId ||\n        caseResponse.success === true ||\n        caseResponse.status === \"SUCCESS\"\n    );\n\n\nconsole.log(\n    \"========== CASE CREATION RESPONSE ==========\"\n);\n\nconsole.log(\n    JSON.stringify(\n        caseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case ID:\",\n    bh.local.caseId\n);\n\nconsole.log(\n    \"Case Created:\",\n    bh.local.caseCreated\n);\n\nconsole.log(\n    \"=============================================\"\n);",
+        "script": "/* =========================================================\n * CASE CREATION RESPONSE\n * ========================================================= */\n\n\n/* ---------------------------------------------------------\n * Default HTTP response status\n *\n * Always set this so the final response never receives\n * an undefined HTTP status code.\n * --------------------------------------------------------- */\n\nbh.local.responseStatus = 200;\n\n\n/* ---------------------------------------------------------\n * Get raw case creation response\n * --------------------------------------------------------- */\n\nconst rawCaseResponse =\n    bh.local.caseCreationResponse || {};\n\n\n/* ---------------------------------------------------------\n * Normalize payload\n * --------------------------------------------------------- */\n\nconst caseResponse =\n    rawCaseResponse &&\n    rawCaseResponse.payload &&\n    typeof rawCaseResponse.payload === \"object\"\n        ? rawCaseResponse.payload\n        : rawCaseResponse;\n\n\n/* ---------------------------------------------------------\n * Store normalized response\n * --------------------------------------------------------- */\n\nbh.local.caseCreationResponse =\n    caseResponse;\n\n\n/* =========================================================\n * EXTRACT CASE ID\n * ========================================================= */\n\nbh.local.caseId =\n    caseResponse.caseId ||\n\n    caseResponse.id ||\n\n    caseResponse.caseInstanceId ||\n\n    (\n        caseResponse.case &&\n        (\n            caseResponse.case.caseId ||\n\n            caseResponse.case.id ||\n\n            caseResponse.case.caseInstanceId\n        )\n    ) ||\n\n    null;\n\n\n/* =========================================================\n * DETERMINE SUCCESS\n * ========================================================= */\n\nbh.local.caseCreated =\n    !!(\n        bh.local.caseId ||\n\n        caseResponse.success === true ||\n\n        caseResponse.status === \"SUCCESS\"\n    );\n\n\n/* =========================================================\n * DETERMINE RESPONSE STATUS\n * ========================================================= */\n\nif (bh.local.caseCreated) {\n\n    bh.local.responseStatus = 200;\n\n}\nelse {\n\n    bh.local.responseStatus = 500;\n\n}\n\n\n/* =========================================================\n * FINAL RESPONSE BODY\n * ========================================================= */\n\nbh.local.response =\n    caseResponse;\n\n\n/* =========================================================\n * DEBUG\n * ========================================================= */\n\nconsole.log(\n    \"========== CASE CREATION RESPONSE ==========\"\n);\n\nconsole.log(\n    \"Raw Case Response:\",\n    JSON.stringify(\n        rawCaseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Normalized Case Response:\",\n    JSON.stringify(\n        caseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case ID:\",\n    bh.local.caseId\n);\n\nconsole.log(\n    \"Case Created:\",\n    bh.local.caseCreated\n);\n\nconsole.log(\n    \"Response Status:\",\n    bh.local.responseStatus\n);\n\nconsole.log(\n    \"Response Body:\",\n    JSON.stringify(\n        bh.local.response,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"=============================================\"\n);",
         "functionName": "finalResponseScript",
         "category": "Function",
         "x": 3385,
@@ -1712,6 +1710,812 @@
         "wires": [
             [
                 "sd_gSX5Qup3eGA0mrVX"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_TwPyl5c2xuiGMbUf",
+        "type": "Start",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "client-server",
+        "nodeType": "start",
+        "name": "getFnolMasterDataInternal",
+        "outputs": 1,
+        "inputVariables": [
+            {
+                "key": "masterDataResponse",
+                "defaultValue": {
+                    "type": "any",
+                    "value": ""
+                },
+                "output": true
+            }
+        ],
+        "localVariables": [],
+        "accept_bh": false,
+        "functionName": "getFnolMasterDataInternal",
+        "category": "General",
+        "x": 405,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_4A7Hlcc9SxtkN3nW"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Claim"
+    },
+    {
+        "id": "sd_4A7Hlcc9SxtkN3nW",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "PrepareMasterDataRequests",
+        "script": "const BASE_URL =\n    bh.system.environment.REELS_BASE_URL;\n\nconst TOKEN =\n    bh.system.environment.REELS_TOKEN;\n\n/*\n * Replace the placeholder UUIDs below with your actual\n * Dataset ID / Master Data ID / Entity ID values.\n */\n\nconst CLAIMANT_TYPE_DATASET_ID = \"72b58c39-817f-4204-95dc-4f5eec8fd929\";\nconst CLAIMANT_TYPE_MDM_ID     = \"b34e9a23-b442-488c-982c-e14f525a19ae\";\nconst CLAIMANT_TYPE_ENTITY_ID  = \"4383405d-0c7a-4d9e-a182-c41481948f8a\";\n\nconst LOSS_TYPE_DATASET_ID = \"72b58c39-817f-4204-95dc-4f5eec8fd929\";\nconst LOSS_TYPE_MDM_ID     = \"08bc2d6f-8ef9-4349-8c8c-40565944b1cd\";\nconst LOSS_TYPE_ENTITY_ID  = \"940c5c81-27fb-49f2-bb53-6b821dac3730\";\n\nconst LOSS_LOCATION_DATASET_ID = \"72b58c39-817f-4204-95dc-4f5eec8fd929\";\nconst LOSS_LOCATION_MDM_ID     = \"c1c987a9-96b8-4507-9948-26287cc55742\";\nconst LOSS_LOCATION_ENTITY_ID  = \"f4463407-3922-4e25-8cc6-7b6569f1f37f\";\n\nconst DRIVER_LICENCE_DATASET_ID = \"72b58c39-817f-4204-95dc-4f5eec8fd929\";\nconst DRIVER_LICENCE_MDM_ID     = \"aec9808b-6c3a-43e4-a7e2-232699894119\";\nconst DRIVER_LICENCE_ENTITY_ID  = \"832e08aa-e9f7-454f-b8a1-8a600c64dc41\";\n\nconst buildUrl = (datasetId, mdmId, entityId) =>\n    `${BASE_URL}/integration/api/records/filter/${datasetId}/${mdmId}/${entityId}`;\n\nbh.local.headers = {\n    token: TOKEN,\n    \"Content-Type\": \"application/json\"\n};\n\nbh.local.requestBody = {\n    pageNumber: 0,\n    pageSize: 100,\n    filter: {},\n    multiplicity: \"multiple\",\n    totalCount: true\n};\n\nbh.local.claimantTypeUrl =\n    buildUrl(CLAIMANT_TYPE_DATASET_ID, CLAIMANT_TYPE_MDM_ID, CLAIMANT_TYPE_ENTITY_ID);\n\nbh.local.lossTypeUrl =\n    buildUrl(LOSS_TYPE_DATASET_ID, LOSS_TYPE_MDM_ID, LOSS_TYPE_ENTITY_ID);\n\nbh.local.lossLocationUrl =\n    buildUrl(LOSS_LOCATION_DATASET_ID, LOSS_LOCATION_MDM_ID, LOSS_LOCATION_ENTITY_ID);\n\nbh.local.driverLicenceStatusUrl =\n    buildUrl(DRIVER_LICENCE_DATASET_ID, DRIVER_LICENCE_MDM_ID, DRIVER_LICENCE_ENTITY_ID);\n\nconsole.log(\"FNOL master-data URLs prepared\");\nconsole.log(\"claimantType:\", bh.local.claimantTypeUrl);\nconsole.log(\"lossType:\", bh.local.lossTypeUrl);\nconsole.log(\"lossLocation:\", bh.local.lossLocationUrl);\nconsole.log(\"driverLicenceStatus:\", bh.local.driverLicenceStatusUrl);",
+        "functionName": "prepareMasterDataRequests",
+        "category": "Function",
+        "x": 605,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_nLILRrSSk2kw2YW6"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_nLILRrSSk2kw2YW6",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "GetClaimantTypes",
+        "method": "post",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.claimantTypeUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "claimantTypeUrl"
+        },
+        "ret": "json",
+        "retMappingObj": {},
+        "reqBody": "bh.local.requestBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "requestBody"
+        },
+        "resultMapping": "bh.local.claimantTypeResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "claimantTypeResponse"
+        },
+        "headerMapping": "bh.local.headers",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "headers"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMappingObj": {},
+        "useAuthTypeMappingObj": {},
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": "",
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": "",
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": "",
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": true,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "getClaimantTypes",
+        "category": "HTTP",
+        "x": 815,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_CG2yZHdDLqv84cXw"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_CG2yZHdDLqv84cXw",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "GetLossTypes",
+        "method": "post",
+        "methodMapping": "",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.lossTypeUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "lossTypeUrl"
+        },
+        "ret": "json",
+        "retMapping": "",
+        "retMappingObj": {},
+        "reqBody": "bh.local.requestBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "requestBody"
+        },
+        "resultMapping": "bh.local.lossTypeResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "lossTypeResponse"
+        },
+        "headers": [],
+        "headersObj": [],
+        "headerMapping": "bh.local.headers",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "headers"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMapping": "",
+        "paramMappingObj": {},
+        "authType": "",
+        "useAuthTypeMappingObj": {},
+        "useAuthTypeMap": {},
+        "useAuthType": "",
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": "",
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": "",
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": "",
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": true,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookies": [],
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "getLossTypes",
+        "category": "HTTP",
+        "x": 1025,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_WcPFwmhxmfLWzX2U"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_WcPFwmhxmfLWzX2U",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "GetLossLocations",
+        "method": "post",
+        "methodMapping": "",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.lossLocationUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "lossLocationUrl"
+        },
+        "ret": "json",
+        "retMapping": "",
+        "retMappingObj": {},
+        "reqBody": "bh.local.requestBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "requestBody"
+        },
+        "resultMapping": "bh.local.lossLocationResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "lossLocationResponse"
+        },
+        "headers": [],
+        "headersObj": [],
+        "headerMapping": "bh.local.headers",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "headers"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMapping": "",
+        "paramMappingObj": {},
+        "authType": "",
+        "useAuthTypeMappingObj": {},
+        "useAuthTypeMap": {},
+        "useAuthType": "",
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": "",
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": "",
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": "",
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": true,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookies": [],
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "getLossLocations",
+        "category": "HTTP",
+        "x": 1235,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_Ehc09P32x7asFH3y"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_Ehc09P32x7asFH3y",
+        "type": "ServerHttpRequest",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "GetDriverLicenceStatuses",
+        "method": "post",
+        "methodMapping": "",
+        "methodMappingObj": {},
+        "urlMapping": "bh.local.driverLicenceStatusUrl",
+        "urlMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "driverLicenceStatusUrl"
+        },
+        "ret": "json",
+        "retMapping": "",
+        "retMappingObj": {},
+        "reqBody": "bh.local.requestBody",
+        "reqBodyObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "requestBody"
+        },
+        "resultMapping": "bh.local.driverLicenceStatusResponse",
+        "resultMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "driverLicenceStatusResponse"
+        },
+        "headers": [],
+        "headersObj": [],
+        "headerMapping": "bh.local.headers",
+        "headerMappingObj": {
+            "mapVarType": "bh.local",
+            "mapVarValue": "headers"
+        },
+        "params": {},
+        "paramsObj": [],
+        "paramMapping": "",
+        "paramMappingObj": {},
+        "authType": "",
+        "useAuthTypeMappingObj": {},
+        "useAuthTypeMap": {},
+        "useAuthType": "",
+        "useAuthUsername": "",
+        "useAuthUsernameMappingObj": "",
+        "useAuthPassword": "",
+        "useAuthPasswordMappingObj": "",
+        "useAuthToken": "",
+        "useAuthTokenMappingObj": "",
+        "useQueryString": false,
+        "tls": "",
+        "followRedirect": true,
+        "paytoqs": false,
+        "useAuthentication": false,
+        "rejectUnauthorized": false,
+        "proxy": "",
+        "useProxy": false,
+        "usetls": false,
+        "cookies": [],
+        "cookiesMapObj": {},
+        "cookiesList": {},
+        "switchStates": {
+            "cookies": "Map"
+        },
+        "editableListData": {},
+        "timeout": {
+            "type": "num",
+            "value": ""
+        },
+        "functionName": "getDriverLicenceStatuses",
+        "category": "HTTP",
+        "x": 1445,
+        "y": 1100,
+        "wires": [
+            [
+                "sd_QsPcWRDbaZJKbX8F"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_QsPcWRDbaZJKbX8F",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "BuildFnolMasterDataResponse",
+        "script": "const getRecords = (response) =>\n    response?.payload?.records || response?.records || [];\n\nbh.local.masterDataResponse = {\n    claimantTypes: getRecords(bh.local.claimantTypeResponse),\n    lossTypes: getRecords(bh.local.lossTypeResponse),\n    lossLocations: getRecords(bh.local.lossLocationResponse),\n    driverLicenceStatuses: getRecords(bh.local.driverLicenceStatusResponse)\n};\n\nconsole.log(\n    \"FNOL Master Data Response:\",\n    JSON.stringify(bh.local.masterDataResponse, null, 2)\n);\n\nbh.input.masterDataResponse = bh.local.masterDataResponse;",
+        "functionName": "buildFnolMasterDataResponse",
+        "category": "Function",
+        "x": 1655,
+        "y": 1100,
+        "wires": [
+            []
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_AkPstqgszKFA1tfV",
+        "type": "HttpIn",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "start",
+        "name": "getFnolMasterData",
+        "path": "/master-data",
+        "uploadpath": "",
+        "summary": "Get FNOL dropdown master data",
+        "description": "Returns claimant type, loss type, loss location and driver licence status master data.",
+        "method": "get",
+        "sequenceId": "IDSAuthroizedAPIs",
+        "consumes": "",
+        "produces": "",
+        "filetype": "path",
+        "acceptFileUpload": false,
+        "useDataModel": false,
+        "dataModelIsArray": false,
+        "erd": "",
+        "erdName": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "responses": [],
+            "params": [],
+            "produces": [],
+            "consumes": []
+        },
+        "inputs": 0,
+        "outputs": 1,
+        "validateRequestUsingSwaggerDocs": false,
+        "category": "HTTP",
+        "x": 405,
+        "y": 880,
+        "wires": [
+            [
+                "sd_Ih7aPP8kUjrizPoY"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "uploadpath": {
+                "type": "str",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": true,
+        "serviceName": "Claim",
+        "functionName": "sd_AkPstqgszKFA1tfV"
+    },
+    {
+        "id": "sd_Ih7aPP8kUjrizPoY",
+        "type": "CallService",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "getFnolMasterDataCallService",
+        "outputs": 1,
+        "isValidNode": true,
+        "noerr": 0,
+        "service": {
+            "id": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+            "type": "tab",
+            "createdDate": "2026-08-12T09:18:30.724Z",
+            "label": "Claim",
+            "disabled": false,
+            "info": "",
+            "functionSeq": 0
+        },
+        "flow": {
+            "flowId": "sd_TwPyl5c2xuiGMbUf",
+            "flowName": "getFnolMasterDataInternal"
+        },
+        "inputVariables": [
+            {
+                "key": "masterDataResponse",
+                "map": true,
+                "valueType": "bh",
+                "value": ""
+            }
+        ],
+        "bhVariables": [],
+        "outputMapping": [
+            {
+                "mapVarType": "input",
+                "key": "masterDataResponse",
+                "valueType": "bh.local",
+                "value": "masterDataResponse",
+                "mapVarName": "masterDataResponse",
+                "localVar": "bh.local.masterDataResponse"
+            }
+        ],
+        "callService": "./Claim",
+        "startName": "getFnolMasterDataInternal",
+        "inputParams": [
+            null
+        ],
+        "accept_bh": false,
+        "functionName": "getFnolMasterDataCallService",
+        "category": "General",
+        "x": 615,
+        "y": 880,
+        "wires": [
+            [
+                "sd_cMTwfQfQPdaYn6Mi"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_cMTwfQfQPdaYn6Mi",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "PrepareMasterDataHttpResponse",
+        "script": "bh.local.masterResponse = {\n    success: true,\n    message: \"FNOL master data fetched successfully\",\n    data: bh.local.masterDataResponse || {\n        claimantTypes: [],\n        lossTypes: [],\n        lossLocations: [],\n        driverLicenceStatuses: []\n    }\n};\n\nconsole.log(\n    \"Master Data HTTP Response:\",\n    JSON.stringify(bh.local.masterResponse, null, 2)\n);",
+        "functionName": "prepareMasterDataHttpResponse",
+        "category": "Function",
+        "x": 825,
+        "y": 880,
+        "wires": [
+            [
+                "sd_b7SFQ05T4nkeKxxo"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_b7SFQ05T4nkeKxxo",
+        "type": "HttpOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "fnolMasterDataHttpOut",
+        "headers": {},
+        "responseBody": {
+            "type": "bh.local",
+            "value": "masterResponse",
+            "ssd_typedInputField": true
+        },
+        "httpcode": {
+            "type": "num",
+            "value": 200,
+            "ssd_typedInputField": true
+        },
+        "responseType": "obj",
+        "swaggerResponse": {},
+        "responseMapping": {
+            "status": 200,
+            "obj": "bh.local.masterResponse",
+            "send": "bh.local.masterResponse"
+        },
+        "dataModelIsArray": false,
+        "inputs": 1,
+        "outputs": 0,
+        "erd": "",
+        "entity": "",
+        "entityId": "",
+        "ref": "",
+        "editableListData": {
+            "headers": [],
+            "produces": [],
+            "responses": []
+        },
+        "cookiesList": {},
+        "switchStates": {
+            "headers": "Map",
+            "cookies": "Map"
+        },
+        "functionName": "fnolMasterDataHttpOut",
+        "category": "HTTP",
+        "x": 1025,
+        "y": 880,
+        "wires": [],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_doW9UnKSoeJzah6a",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "script": "/* =========================================================\n   EMAIL SEND DECISION\n   BEFORE SWITCH NODE\n   ========================================================= */\n\nconsole.log(\n    \"========== EMAIL SEND DECISION ==========\"\n);\n\n\n/* =========================================================\n   DEFAULT VALUES\n   ========================================================= */\n\nbh.local.emailSend = false;\n\nbh.local.emailRequired = false;\n\nbh.local.emailFrom =\n    \"maritdev2017@gmail.com\";\n\nbh.local.emailTo = \"\";\n\n\n/* =========================================================\n   CLAIM FOUND\n   ========================================================= */\n\nconst claimFound =\n    bh.local.claimFound === true ||\n    bh.local.claimFound === \"true\";\n\n\n/* =========================================================\n   NORMALIZE CLAIM RESPONSE\n   ========================================================= */\n\nlet rows =\n    bh.local.claimResponse;\n\n\nif (Array.isArray(rows)) {\n\n    rows = rows;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.rows)\n) {\n\n    rows = rows.rows;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.payload)\n) {\n\n    rows = rows.payload;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.data)\n) {\n\n    rows = rows.data;\n\n}\nelse {\n\n    rows = [];\n\n}\n\n\n/* =========================================================\n   GET CLAIM RECORD\n   ========================================================= */\n\nconst claim =\n    rows.length > 0\n        ? rows[0]\n        : {};\n\n\n/* =========================================================\n   GET PREFERRED CONTACT METHOD\n   ========================================================= */\n\nconst preferredContactMethod =\n    (\n        claim.preferred_contact_method ||\n\n        claim.preferred_contact_mehod ||\n\n        claim.preferredContactMethod ||\n\n        \"\"\n    )\n    .toString()\n    .trim()\n    .toUpperCase();\n\n\n/* =========================================================\n   GET PREFERRED CONTACT VALUE\n   ========================================================= */\n\nconst preferredContactValue =\n    (\n        claim.preferred_contact_value ||\n\n        claim.preferredContactValue ||\n\n        \"\"\n    )\n    .toString()\n    .trim();\n\n\n/* =========================================================\n   VALIDATE EMAIL FORMAT\n   ========================================================= */\n\nconst emailPattern =\n    /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n\nconst validEmail =\n    emailPattern.test(\n        preferredContactValue\n    );\n\n\n/* =========================================================\n   DEBUG INPUT\n   ========================================================= */\n\nconsole.log(\n    \"Claim Found:\",\n    claimFound\n);\n\nconsole.log(\n    \"Claim Records:\",\n    rows.length\n);\n\nconsole.log(\n    \"Claim Record:\",\n    claim\n);\n\nconsole.log(\n    \"Preferred Contact Method:\",\n    preferredContactMethod\n);\n\nconsole.log(\n    \"Preferred Contact Value:\",\n    preferredContactValue\n);\n\nconsole.log(\n    \"Valid Email:\",\n    validEmail\n);\n\n\n/* =========================================================\n   EMAIL CONDITION\n   =========================================================\n   \n   Email should be sent ONLY when ALL conditions are true:\n\n   1. Claim exists\n   2. Claim record exists\n   3. Preferred Contact Method = EMAIL\n   4. Preferred Contact Value is not empty\n   5. Preferred Contact Value is a valid email\n   ========================================================= */\n\nif (\n    claimFound === true &&\n\n    rows.length > 0 &&\n\n    preferredContactMethod === \"EMAIL\" &&\n\n    preferredContactValue !== \"\" &&\n\n    validEmail === true\n) {\n\n    /* =====================================================\n       EMAIL REQUIRED\n       ===================================================== */\n\n    bh.local.emailSend = true;\n\n    bh.local.emailRequired = true;\n\n    bh.local.emailTo =\n        preferredContactValue;\n\n\n    console.log(\n        \"EMAIL CONDITION SATISFIED\"\n    );\n\n    console.log(\n        \"Email Send:\",\n        bh.local.emailSend\n    );\n\n    console.log(\n        \"Email To:\",\n        bh.local.emailTo\n    );\n\n}\nelse {\n\n    /* =====================================================\n       EMAIL NOT REQUIRED\n       ===================================================== */\n\n    bh.local.emailSend = false;\n\n    bh.local.emailRequired = false;\n\n    bh.local.emailTo = \"\";\n\n\n    console.log(\n        \"EMAIL CONDITION NOT SATISFIED\"\n    );\n\n    console.log(\n        \"Claim Found:\",\n        claimFound\n    );\n\n    console.log(\n        \"Records:\",\n        rows.length\n    );\n\n    console.log(\n        \"Preferred Contact Method:\",\n        preferredContactMethod\n    );\n\n    console.log(\n        \"Preferred Contact Value:\",\n        preferredContactValue\n    );\n\n    console.log(\n        \"Valid Email:\",\n        validEmail\n    );\n\n}\n\n\n/* =========================================================\n   FINAL SWITCH VALUE\n   ========================================================= */\n\nconsole.log(\n    \"==========================================\"\n);\n\nconsole.log(\n    \"FINAL emailSend:\",\n    bh.local.emailSend\n);\n\nconsole.log(\n    \"FINAL emailRequired:\",\n    bh.local.emailRequired\n);\n\nconsole.log(\n    \"FINAL emailTo:\",\n    bh.local.emailTo\n);\n\nconsole.log(\n    \"==========================================\"\n);",
+        "functionName": "sd_doW9UnKSoeJzah6a",
+        "category": "Function",
+        "x": 1685,
+        "y": 680,
+        "wires": [
+            [
+                "sd_F8emBu429qPxtfm4"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_F8emBu429qPxtfm4",
+        "type": "Switch",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "property": "emailSend",
+        "propertyType": "bh.local",
+        "propertyGv": "bh.local.emailSend",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "false"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "functionName": "sd_F8emBu429qPxtfm4",
+        "category": "Function",
+        "x": 1785,
+        "y": 680,
+        "wires": [
+            [
+                "sd_q6oShd5OLWHQeteH"
+            ],
+            [
+                "sd_7ZQ8LohFIJNdoMqV"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_vUzFQ4a5kuTp1Hzq",
+        "type": "EmailOut",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "",
+        "emailoutconfig": "sd_Tx8xifuCc5sWAFFF",
+        "from": "bh.local.emailFrom",
+        "to": "bh.local.emailTo",
+        "cc": "undefined",
+        "bcc": "undefined",
+        "subject": "bh.local.emailSubject",
+        "body": "bh.local.emailBody",
+        "html": "bh.local.emailHtml",
+        "attachment": [],
+        "attachmentList": {},
+        "switchStates": {
+            "attachment": "Map"
+        },
+        "editableListData": {},
+        "routingoptions": "undefined",
+        "iCal": "undefined",
+        "contentoptions": "undefined",
+        "headeroptions": "undefined",
+        "securityoptions": "undefined",
+        "outputs": 1,
+        "resultMapping": "bh.local.emailResult",
+        "functionName": "sd_vUzFQ4a5kuTp1Hzq",
+        "category": "Messaging",
+        "x": 2005,
+        "y": 600,
+        "wires": [
+            [
+                "sd_7ZQ8LohFIJNdoMqV"
+            ]
+        ],
+        "__ssdTypeInputs__": {
+            "from": {
+                "type": "bh.local",
+                "value": "emailFrom",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "to": {
+                "type": "bh.local",
+                "value": "emailTo",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "cc": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "bcc": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "subject": {
+                "type": "bh.local",
+                "value": "emailSubject",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "body": {
+                "type": "bh.local",
+                "value": "emailBody",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "html": {
+                "type": "bh.local",
+                "value": "emailHtml",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "routingoptions": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "iCal": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "contentoptions": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "headeroptions": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "securityoptions": {
+                "type": "bh",
+                "value": "",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            },
+            "resultMapping": {
+                "type": "bh.local",
+                "value": "emailResult",
+                "nullable": "true",
+                "nullableValue": "undefined",
+                "constant": false
+            }
+        },
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_q6oShd5OLWHQeteH",
+        "type": "Script",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "",
+        "script": "/* =========================================================\n   PREPARE CLAIM DECISION EMAIL\n   SWITCH TRUE BRANCH\n   ========================================================= */\n\nconsole.log(\n    \"========== PREPARE CLAIM DECISION EMAIL ==========\"\n);\n\n\n/* =========================================================\n   EMAIL CONFIGURATION\n   ========================================================= */\n\nbh.local.emailFrom =\n    \"maritdev2017@gmail.com\";\n\nbh.local.emailResult = {};\n\n\n/* =========================================================\n   NORMALIZE CLAIM RESPONSE\n   ========================================================= */\n\nlet rows =\n    bh.local.claimResponse;\n\n\nif (Array.isArray(rows)) {\n\n    rows = rows;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.rows)\n) {\n\n    rows = rows.rows;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.payload)\n) {\n\n    rows = rows.payload;\n\n}\nelse if (\n    rows &&\n    Array.isArray(rows.data)\n) {\n\n    rows = rows.data;\n\n}\nelse {\n\n    rows = [];\n\n}\n\n\n/* =========================================================\n   GET CLAIM\n   ========================================================= */\n\nconst claim =\n    rows.length > 0\n        ? rows[0]\n        : {};\n\n\n/* =========================================================\n   CLAIM DETAILS\n   ========================================================= */\n\nconst claimId =\n    claim.claim_id ||\n    claim.claimId ||\n    bh.local.claimId ||\n    \"\";\n\nconst claimNumber =\n    claim.claim_number ||\n    claim.claimNumber ||\n    bh.local.claimNumber ||\n    \"\";\n\nconst policyNumber =\n    claim.policy_number ||\n    claim.policyNumber ||\n    \"\";\n\nconst claimantType =\n    claim.claimant_type ||\n    claim.claimantType ||\n    \"\";\n\nconst lossType =\n    claim.loss_type ||\n    claim.lossType ||\n    \"\";\n\nconst lossLocation =\n    claim.loss_location ||\n    claim.lossLocation ||\n    \"\";\n\nconst lossDate = claim.loss_date_time\n    ? (\n        claim.loss_date_time instanceof Date\n            ? claim.loss_date_time.toISOString().split(\"T\")[0]\n            : claim.loss_date_time.toString().substring(0, 10)\n      )\n    : \"\";\n\nconst lossDescription =\n    claim.loss_description ||\n    claim.lossDescription ||\n    \"\";\n\nconst estimatedAmount =\n    claim.estimated_amount ||\n    claim.estimated_loss_amount ||\n    claim.estimatedLossAmount ||\n    \"\";\n\nconst driverName =\n    claim.driver_name ||\n    claim.driverName ||\n    \"\";\n\nconst vehicleRegistration =\n    claim.vehicle_registration ||\n    claim.vehicleRegistration ||\n    \"\";\n\nconst vehicleMake =\n    claim.vehicle_make ||\n    claim.vehicleMake ||\n    \"\";\n\nconst vehicleModel =\n    claim.vehicle_model ||\n    claim.vehicleModel ||\n    \"\";\n\n\n/* =========================================================\n   DECISION DETAILS\n   ========================================================= */\n\nconst decision =\n    bh.local.decision ||\n    claim.decision ||\n    \"\";\n\nconst status =\n    bh.local.status ||\n    claim.status ||\n    \"\";\n\nconst oldStatus =\n    bh.local.oldStatus ||\n    claim.old_status ||\n    \"\";\n\nconst newStatus =\n    bh.local.status ||\n    claim.new_status ||\n    claim.status ||\n    \"\";\n\n\n/* =========================================================\n   AUDIT DETAILS\n   ========================================================= */\n\nconst correlationId =\n    bh.local.correlationId ||\n    claim.correlation_id ||\n    claim.correlationId ||\n    \"\";\n\nconst auditRecorded =\n    bh.local.auditInsertSuccess === true ||\n    bh.local.auditInsertSuccess === \"true\";\n\n\n/* =========================================================\n   EMAIL TO\n   ========================================================= */\n\nbh.local.emailTo =\n    claim.preferred_contact_value ||\n    claim.preferredContactValue ||\n    bh.local.emailTo ||\n    \"\";\n\n\n/* =========================================================\n   SUBJECT\n   ========================================================= */\n\nbh.local.emailSubject =\n    \"FNOL Claim Decision - \" +\n    (claimNumber || claimId);\n\n\n/* =========================================================\n   PLAIN TEXT BODY\n   ========================================================= */\n\nbh.local.emailBody =\n\n    \"Hello,\\n\\n\" +\n\n    \"Your insurance claim decision has been updated.\\n\\n\" +\n\n    \"CLAIM DETAILS\\n\" +\n    \"--------------\\n\" +\n\n    \"Claim ID: \" +\n    (claimId || \"N/A\") +\n    \"\\n\" +\n\n    \"Claim Number: \" +\n    (claimNumber || \"N/A\") +\n    \"\\n\" +\n\n    // \"Policy Number: \" +\n    // (policyNumber || \"N/A\") +\n    // \"\\n\" +\n\n    \"Claimant Type: \" +\n    (claimantType || \"N/A\") +\n    \"\\n\" +\n\n    \"Loss Type: \" +\n    (lossType || \"N/A\") +\n    \"\\n\" +\n\n    \"Loss Location: \" +\n    (lossLocation || \"N/A\") +\n    \"\\n\" +\n\n    \"Loss Date: \" +\n    (lossDate || \"N/A\") +\n    \"\\n\" +\n\n    \"Loss Description: \" +\n    (lossDescription || \"N/A\") +\n    \"\\n\" +\n\n    \"Estimated Loss Amount: \" +\n    (estimatedAmount || \"N/A\") +\n    \"\\n\" +\n\n    \"Driver Name: \" +\n    (driverName || \"N/A\") +\n    \"\\n\" +\n\n    \"Vehicle Registration: \" +\n    (vehicleRegistration || \"N/A\") +\n    \"\\n\" +\n\n    \"Vehicle: \" +\n\n    (\n        [\n            vehicleMake,\n            vehicleModel\n        ]\n        .filter(function(v) {\n\n            return (\n                v !== null &&\n                v !== undefined &&\n                v !== \"\"\n            );\n\n        })\n        .join(\" \") || \"N/A\"\n    ) +\n\n    \"\\n\\n\" +\n\n    \"CLAIM DECISION\\n\" +\n    \"--------------\\n\" +\n\n    \"Decision: \" +\n    (decision || \"N/A\") +\n    \"\\n\" +\n\n    \"Previous Status: \" +\n    (oldStatus || \"N/A\") +\n    \"\\n\" +\n\n    \"New Status: \" +\n    (newStatus || status || \"N/A\") +\n    \"\\n\\n\" +\n\n    \"AUDIT INFORMATION\\n\" +\n    \"------------------\\n\" +\n\n    \"Audit Recorded: \" +\n    (auditRecorded ? \"Yes\" : \"No\") +\n    \"\\n\" +\n\n    \"Correlation ID: \" +\n    (correlationId || \"N/A\") +\n    \"\\n\\n\" +\n\n    \"This notification was generated automatically by the \" +\n    \"Insurance Claims FNOL POC.\\n\\n\" +\n\n    \"Regards,\\n\" +\n    \"Insurance Claims POC Team\";\n\n\n/* =========================================================\n   HTML BODY\n   ========================================================= */\n\nbh.local.emailHtml =\n\n    \"<html>\" +\n\n    \"<body style=\\\"font-family: Arial, sans-serif;\\\">\" +\n\n    \"<h2>Insurance Claims FNOL POC</h2>\" +\n\n    \"<p>\" +\n    \"Your insurance claim decision has been updated.\" +\n    \"</p>\" +\n\n    \"<h3>Claim Details</h3>\" +\n\n    \"<table border=\\\"1\\\" cellpadding=\\\"8\\\" cellspacing=\\\"0\\\">\" +\n\n    \"<tr>\" +\n    \"<td><b>Claim ID</b></td>\" +\n    \"<td>\" + (claimId || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Claim Number</b></td>\" +\n    \"<td>\" + (claimNumber || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Policy Number</b></td>\" +\n    \"<td>\" + (policyNumber || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Claimant Type</b></td>\" +\n    \"<td>\" + (claimantType || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Loss Type</b></td>\" +\n    \"<td>\" + (lossType || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Loss Location</b></td>\" +\n    \"<td>\" + (lossLocation || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Loss Date</b></td>\" +\n    \"<td>\" + (lossDate || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Estimated Loss Amount</b></td>\" +\n    \"<td>\" + (estimatedAmount || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"</table>\" +\n\n    \"<h3>Claim Decision</h3>\" +\n\n    \"<table border=\\\"1\\\" cellpadding=\\\"8\\\" cellspacing=\\\"0\\\">\" +\n\n    \"<tr>\" +\n    \"<td><b>Decision</b></td>\" +\n    \"<td>\" + (decision || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Previous Status</b></td>\" +\n    \"<td>\" + (oldStatus || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>New Status</b></td>\" +\n    \"<td>\" + (newStatus || status || \"N/A\") + \"</td>\" +\n    \"</tr>\" +\n\n    \"</table>\" +\n\n    \"<h3>Audit Information</h3>\" +\n\n    \"<table border=\\\"1\\\" cellpadding=\\\"8\\\" cellspacing=\\\"0\\\">\" +\n\n    \"<tr>\" +\n    \"<td><b>Audit Recorded</b></td>\" +\n    \"<td>\" +\n    (auditRecorded ? \"Yes\" : \"No\") +\n    \"</td>\" +\n    \"</tr>\" +\n\n    \"<tr>\" +\n    \"<td><b>Correlation ID</b></td>\" +\n    \"<td>\" +\n    (correlationId || \"N/A\") +\n    \"</td>\" +\n    \"</tr>\" +\n\n    \"</table>\" +\n\n    \"<br>\" +\n\n    \"<p>\" +\n    \"This notification was generated automatically by the \" +\n    \"Insurance Claims FNOL POC.\" +\n    \"</p>\" +\n\n    \"<p>\" +\n    \"Regards,<br>\" +\n    \"Insurance Claims POC Team\" +\n    \"</p>\" +\n\n    \"</body>\" +\n\n    \"</html>\";\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== EMAIL READY ==========\"\n);\n\nconsole.log(\n    \"Email Send:\",\n    bh.local.emailSend\n);\n\nconsole.log(\n    \"Email From:\",\n    bh.local.emailFrom\n);\n\nconsole.log(\n    \"Email To:\",\n    bh.local.emailTo\n);\n\nconsole.log(\n    \"Email Subject:\",\n    bh.local.emailSubject\n);\n\nconsole.log(\n    \"=================================\"\n);",
+        "functionName": "sd_q6oShd5OLWHQeteH",
+        "category": "Function",
+        "x": 1885,
+        "y": 600,
+        "wires": [
+            [
+                "sd_vUzFQ4a5kuTp1Hzq"
             ]
         ],
         "__n_excludedFromValidation__": {},
