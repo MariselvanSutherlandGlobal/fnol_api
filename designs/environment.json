@@ -24,7 +24,8 @@
             "CASE_SERVICE_BASE_URL": "server",
             "CASE_SERVICE_TOKEN_URL": "server",
             "CASE_SERVICE_CLIENT_ID": "server",
-            "CASE_SERVICE_CLIENT_SECRET": "server"
+            "CASE_SERVICE_CLIENT_SECRET": "server",
+            "apiKeysgrid": "server"
         }
     },
     "dev": {
@@ -52,7 +53,8 @@
             "CASE_SERVICE_BASE_URL": "https://alpha-pt.neutrinos-apps.com",
             "CASE_SERVICE_TOKEN_URL": "https://ids-ctr-pt.neutrinos-apps.com/token",
             "CASE_SERVICE_CLIENT_ID": "0ddh_euTKkSA682Yy5HuC",
-            "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C"
+            "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C",
+            "apiKeysgrid": "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"
         }
     },
     "prod": {
@@ -80,7 +82,8 @@
             "CASE_SERVICE_BASE_URL": "https://alpha-pt.neutrinos-apps.com",
             "CASE_SERVICE_TOKEN_URL": "https://ids-ctr-pt.neutrinos-apps.com/token",
             "CASE_SERVICE_CLIENT_ID": "0ddh_euTKkSA682Yy5HuC",
-            "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C"
+            "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C",
+            "apiKeysgrid": "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"
         }
     }
 }

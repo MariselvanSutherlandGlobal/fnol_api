@@ -431,7 +431,7 @@ export default {
             "tls": true,
             "secure": false,
             "userid": "apikey",
-            "password": "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",
+            "password": process.env.apiKeysgrid,
             "category": "config",
             "__ssdTypeInputs__": {
                 "server": {
@@ -450,8 +450,8 @@ export default {
                     "constant": false
                 },
                 "password": {
-                    "type": "str",
-                    "value": "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",
+                    "type": "process.env",
+                    "value": "apiKeysgrid",
                     "constant": false
                 }
             },
