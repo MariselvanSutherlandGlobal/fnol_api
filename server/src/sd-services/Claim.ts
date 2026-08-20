@@ -3635,7 +3635,7 @@ export class Claim {
       } else {
         throw new Error('Cannot find the selected config name');
       }
-      let params = undefined;
+      let params = [];
       params = params ? params : [];
       bh.local.auditResponse = await new GenericRDBMSOperations().executeSQL(
         connectionName,
@@ -3667,7 +3667,14 @@ export class Claim {
    FINAL CLAIM DECISION RESPONSE
    ========================================================= */
 
-      console.log('========== FINAL CLAIM DECISION RESPONSE ==========');
+      bh.local.auditInsertSuccess = true;
+
+      /* =========================================================
+   GET AUDIT ID
+   ========================================================= */
+
+      let result = bh.local.auditResponse;
+      console.log('========== FINAL AUDIT RESPONSE ==========');
 
       /* =========================================================
    NORMALIZE FLAGS
