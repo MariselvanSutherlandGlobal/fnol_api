@@ -2411,7 +2411,7 @@
         "y": 700,
         "wires": [
             [
-                "sd_QORpPgvflcdb0fx2"
+                "sd_1VOY74enEH2Q34mi"
             ]
         ],
         "__n_excludedFromValidation__": {},
@@ -2442,20 +2442,17 @@
         "outputs": 2,
         "functionName": "sd_QORpPgvflcdb0fx2",
         "category": "Function",
-        "x": 2125,
-        "y": 700,
+        "x": 2105,
+        "y": 620,
         "wires": [
             [
                 "sd_uhiQ595xjvqhfjje"
             ],
-            [
-                "sd_1VOY74enEH2Q34mi"
-            ]
+            []
         ],
         "__n_excludedFromValidation__": {},
-        "generateNext": false,
-        "serviceName": "Claim",
-        "generated": true
+        "generateNext": true,
+        "serviceName": "Claim"
     },
     {
         "id": "sd_7K4xmJndrYSxsW9m",
@@ -2472,7 +2469,6 @@
         "subject": "bh.local.emailSubject",
         "body": "bh.local.emailBody",
         "html": "bh.local.emailHtml",
-        "attachment": [],
         "attachmentList": {},
         "switchStates": {
             "attachment": "Map"
@@ -2490,9 +2486,7 @@
         "x": 2345,
         "y": 620,
         "wires": [
-            [
-                "sd_1VOY74enEH2Q34mi"
-            ]
+            []
         ],
         "__ssdTypeInputs__": {
             "from": {
@@ -2588,9 +2582,8 @@
             }
         },
         "__n_excludedFromValidation__": {},
-        "generateNext": false,
-        "serviceName": "Claim",
-        "generated": true
+        "generateNext": true,
+        "serviceName": "Claim"
     },
     {
         "id": "sd_uhiQ595xjvqhfjje",
@@ -2610,9 +2603,8 @@
             ]
         ],
         "__n_excludedFromValidation__": {},
-        "generateNext": false,
-        "serviceName": "Claim",
-        "generated": true
+        "generateNext": true,
+        "serviceName": "Claim"
     },
     {
         "id": "sd_jtmB7o9PqYxOolFO",
