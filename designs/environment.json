@@ -54,7 +54,7 @@
             "CASE_SERVICE_TOKEN_URL": "https://ids-ctr-pt.neutrinos-apps.com/token",
             "CASE_SERVICE_CLIENT_ID": "0ddh_euTKkSA682Yy5HuC",
             "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C",
-            "apiKeysgrid": "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"
+            "apiKeysgrid": "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"
         }
     },
     "prod": {
@@ -83,7 +83,7 @@
             "CASE_SERVICE_TOKEN_URL": "https://ids-ctr-pt.neutrinos-apps.com/token",
             "CASE_SERVICE_CLIENT_ID": "0ddh_euTKkSA682Yy5HuC",
             "CASE_SERVICE_CLIENT_SECRET": "e28WZR6ZKyrYILTSKKClFEwNlYoGR2cvISwFCoIXP4S7DJgsaqhHRSNqpoWgYbcx_DUlrSkoA1zS5uFOzP-J9C",
-            "apiKeysgrid": "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"
+            "apiKeysgrid": "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"
         }
     }
 }

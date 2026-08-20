@@ -1316,8 +1316,71 @@ export class Claim {
 
       const lossDateTime = bh.local.lossDateTime;
 
-      const lossType = bh.local.lossType;
+      const lossType = String(bh.local.lossType || '')
+        .trim()
+        .toUpperCase();
+      let coveredPerils = policy.covered_perils || [];
+      if (typeof coveredPerils === 'string') {
+        try {
+          coveredPerils = JSON.parse(coveredPerils);
+        } catch (error) {
+          console.log('Unable to parse policy covered_perils:', coveredPerils);
 
+          coveredPerils = [];
+        }
+      }
+
+      if (!Array.isArray(coveredPerils)) {
+        coveredPerils = [];
+      }
+
+      /* =========================================================
+   NORMALIZE POLICY PERILS
+   ========================================================= */
+
+      coveredPerils = coveredPerils.map((peril) =>
+        String(peril).trim().toUpperCase()
+      );
+
+      /* =========================================================
+   UI LOSS TYPE → POLICY PERIL
+   ========================================================= */
+
+      const perilMap = {
+        GLASS_DAMAGE: 'GLASS',
+
+        COLLISION: 'COLLISION',
+
+        THEFT: 'THEFT',
+      };
+
+      /* =========================================================
+   FIND REQUIRED POLICY PERIL
+   ========================================================= */
+
+      const requiredPeril = perilMap[lossType] || lossType;
+
+      /* =========================================================
+   VALIDATE COVERAGE
+   ========================================================= */
+
+      bh.local.perilCovered = coveredPerils.includes(requiredPeril);
+
+      /* =========================================================
+   DEBUG
+   ========================================================= */
+
+      console.log('========== PERIL COVERAGE ==========');
+
+      console.log('UI Loss Type:', lossType);
+
+      console.log('Required Policy Peril:', requiredPeril);
+
+      console.log('Policy Covered Perils:', coveredPerils);
+
+      console.log('Peril Covered:', bh.local.perilCovered);
+
+      console.log('====================================');
       const estimatedLossAmount = Number(bh.local.estimatedLossAmount || 0);
 
       /* =========================================================
@@ -2176,7 +2239,8 @@ export class Claim {
         lossLocation: bh.local.lossLocation,
 
         lossType: bh.local.lossType,
-
+        perilCovered: !!bh.local.perilCovered,
+        coverageValid: !!bh.local.perilCovered,
         lossDescription: bh.local.lossDescription || '',
 
         /* =====================================================
@@ -3627,7 +3691,11 @@ export class Claim {
       /* =========================================================
    FINAL SUCCESS
    ========================================================= */
+      bh.local.finalResponse = {
+        success: true,
 
+        message: 'Claim decision updated successfully.',
+      };
       if (
         claimFound &&
         claimUpdateSuccess &&
