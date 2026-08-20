@@ -1265,7 +1265,7 @@ export class Claim {
         bh.local.policyStatus = policy.policy_status;
       }
       this.tracerService.sendData(spanInst, bh);
-      bh = await this.duplicateClaimCheck(bh, parentSpanInst);
+      bh = await this.duplicateAndPriorClaimCheck(bh, parentSpanInst);
       //appendnew_next_policyResultResponse
       return bh;
     } catch (e) {
@@ -1279,27 +1279,36 @@ export class Claim {
     }
   }
 
-  async duplicateClaimCheck(bh, parentSpanInst) {
+  async duplicateAndPriorClaimCheck(bh, parentSpanInst) {
     const spanInst = this.tracerService.createSpan(
-      'duplicateClaimCheck',
+      'duplicateAndPriorClaimCheck',
       parentSpanInst
     );
     try {
       /* =========================================================
-   DUPLICATE CLAIM CHECK
+   DUPLICATE CLAIM CHECK + PRIOR CLAIMS COUNT
    ========================================================= */
 
       /*
-   Duplicate definition for POC:
+   DUPLICATE DEFINITION FOR POC:
 
    Same policy
    + same loss type
    + same loss date
    + similar claim amount
 
-   We check existing claims BEFORE inserting the
-   current claim.
+   PRIOR CLAIMS DEFINITION FOR POC:
+
+   Same policy
+   + claims in the previous 12 months
+   + claim loss date BEFORE current claim loss date
+
+   The current claim is checked BEFORE insertion.
 */
+
+      /* =========================================================
+   INPUTS
+   ========================================================= */
 
       const policyId = Number(
         bh.local.verifiedPolicyId || bh.local.policyId || 0
@@ -1312,7 +1321,7 @@ export class Claim {
       const estimatedLossAmount = Number(bh.local.estimatedLossAmount || 0);
 
       /* =========================================================
-   DEFAULT
+   DEFAULT VALUES
    ========================================================= */
 
       bh.local.duplicateClaimFlag = false;
@@ -1320,6 +1329,12 @@ export class Claim {
       bh.local.duplicateClaimId = null;
 
       bh.local.duplicateClaimNumber = null;
+
+      /*
+   IMPORTANT:
+   Default prior claim count is 0.
+*/
+      bh.local.priorClaims12m = 0;
 
       /* =========================================================
    VALIDATION
@@ -1329,7 +1344,7 @@ export class Claim {
         console.log('Duplicate check skipped - required values missing');
       } else {
         /* =====================================================
-       DUPLICATE SQL
+       DUPLICATE CLAIM SQL
 
        Same:
        - policy
@@ -1366,6 +1381,36 @@ export class Claim {
           estimatedLossAmount,
         ];
 
+        /* =====================================================
+       PRIOR CLAIMS COUNT - PREVIOUS 12 MONTHS
+
+       Count existing claims for the same policy where:
+
+       loss_date_time >= current loss date - 12 months
+
+       AND
+
+       loss_date_time < current loss date
+
+       This prevents the current claim from being counted.
+       ===================================================== */
+
+        bh.local.priorClaimsSql = `
+        SELECT
+            COUNT(*) AS prior_claims_12m
+        FROM claims
+        WHERE policy_id = $1
+          AND loss_date_time >=
+              ($2::timestamp - INTERVAL '12 months')
+          AND loss_date_time < $2::timestamp;
+    `;
+
+        bh.local.priorClaimsSqlParams = [policyId, lossDateTime];
+
+        /* =====================================================
+       LOGGING
+       ===================================================== */
+
         console.log('========== DUPLICATE CHECK ==========');
 
         console.log('Policy ID:', policyId);
@@ -1379,10 +1424,22 @@ export class Claim {
         console.log('Duplicate SQL:', bh.local.duplicateClaimSql);
 
         console.log('======================================');
+
+        console.log('========== PRIOR CLAIMS CHECK ==========');
+
+        console.log('Policy ID:', policyId);
+
+        console.log('Current Loss Date:', lossDateTime);
+
+        console.log('Prior Claims SQL:', bh.local.priorClaimsSql);
+
+        console.log('Prior Claims SQL Params:', bh.local.priorClaimsSqlParams);
+
+        console.log('========================================');
       }
       this.tracerService.sendData(spanInst, bh);
       bh = await this.duplicateClaimSql(bh, parentSpanInst);
-      //appendnew_next_duplicateClaimCheck
+      //appendnew_next_duplicateAndPriorClaimCheck
       return bh;
     } catch (e) {
       return await this.errorHandler(
@@ -1390,7 +1447,7 @@ export class Claim {
         e,
         'sd_SyCb7KeFfsHWri2N',
         spanInst,
-        'duplicateClaimCheck'
+        'duplicateAndPriorClaimCheck'
       );
     }
   }
@@ -1424,7 +1481,7 @@ export class Claim {
           params
         );
       this.tracerService.sendData(spanInst, bh);
-      bh = await this.duplicateClaimResponse(bh, parentSpanInst);
+      bh = await this.priorClaimSql(bh, parentSpanInst);
       //appendnew_next_duplicateClaimSql
       return bh;
     } catch (e) {
@@ -1438,6 +1495,48 @@ export class Claim {
     }
   }
 
+  async priorClaimSql(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'priorClaimSql',
+      parentSpanInst
+    );
+    try {
+      let configObj = this.sdService.getConfigObj(
+        'db-config',
+        'sd_OhBYahJpKIdIWsaK'
+      );
+      let connectionName;
+      if (
+        configObj &&
+        configObj.hasOwnProperty('dbOption') &&
+        configObj.dbOption.hasOwnProperty('name')
+      ) {
+        connectionName = configObj.dbOption.name;
+      } else {
+        throw new Error('Cannot find the selected config name');
+      }
+      let params = bh.local.priorClaimsSqlParams;
+      params = params ? params : [];
+      bh.local.priorClaims12m = await new GenericRDBMSOperations().executeSQL(
+        connectionName,
+        bh.local.priorClaimsSql,
+        params
+      );
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.duplicateClaimResponse(bh, parentSpanInst);
+      //appendnew_next_priorClaimSql
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_T9u31GzeVJGBw5oO',
+        spanInst,
+        'priorClaimSql'
+      );
+    }
+  }
+
   async duplicateClaimResponse(bh, parentSpanInst) {
     const spanInst = this.tracerService.createSpan(
       'duplicateClaimResponse',
@@ -1445,25 +1544,36 @@ export class Claim {
     );
     try {
       /* =========================================================
+   DUPLICATE CLAIM + PRIOR CLAIMS RESPONSE
+   ========================================================= */
+
+      /* =========================================================
    DUPLICATE CLAIM RESPONSE
    ========================================================= */
 
-      const result = bh.local.duplicateClaimResult || [];
+      const duplicateResult = bh.local.duplicateClaimResult || [];
 
-      console.log('Duplicate query result:', JSON.stringify(result, null, 2));
+      console.log(
+        'Duplicate query result:',
+        JSON.stringify(duplicateResult, null, 2)
+      );
 
       /* =========================================================
-   NO DUPLICATE
+   DEFAULT DUPLICATE VALUES
    ========================================================= */
 
-      if (!Array.isArray(result) || result.length === 0) {
-        bh.local.duplicateClaimFlag = false;
+      bh.local.duplicateClaimFlag = false;
 
-        bh.local.duplicateClaimId = null;
+      bh.local.duplicateClaimId = null;
 
-        bh.local.duplicateClaimNumber = null;
-      } else {
-        const duplicate = result[0];
+      bh.local.duplicateClaimNumber = null;
+
+      /* =========================================================
+   PROCESS DUPLICATE RESULT
+   ========================================================= */
+
+      if (Array.isArray(duplicateResult) && duplicateResult.length > 0) {
+        const duplicate = duplicateResult[0];
 
         bh.local.duplicateClaimFlag = true;
 
@@ -1472,11 +1582,62 @@ export class Claim {
         bh.local.duplicateClaimNumber = duplicate.claim_number;
       }
 
-      console.log('duplicateClaimFlag:', bh.local.duplicateClaimFlag);
+      /* =========================================================
+   PRIOR CLAIMS 12 MONTH RESPONSE
+   ========================================================= */
 
-      console.log('duplicateClaimId:', bh.local.duplicateClaimId);
+      const priorClaimsResult = bh.local.priorClaimsResult || [];
 
-      console.log('duplicateClaimNumber:', bh.local.duplicateClaimNumber);
+      console.log(
+        'Prior claims query result:',
+        JSON.stringify(priorClaimsResult, null, 2)
+      );
+
+      /* =========================================================
+   DEFAULT PRIOR CLAIM VALUES
+   ========================================================= */
+
+      bh.local.priorClaims12m = 0;
+
+      bh.local.priorClaimsValid = true;
+
+      /* =========================================================
+   GET PRIOR CLAIM COUNT
+   ========================================================= */
+
+      if (Array.isArray(priorClaimsResult) && priorClaimsResult.length > 0) {
+        const priorClaims = priorClaimsResult[0];
+
+        bh.local.priorClaims12m = Number(priorClaims.prior_claims_12m || 0);
+      }
+
+      /* =========================================================
+   PRIOR CLAIM VALIDATION
+   =========================================================
+
+   <= 1  → VALID
+   > 1   → INVALID
+   ========================================================= */
+
+      bh.local.priorClaimsValid = bh.local.priorClaims12m <= 1;
+
+      /* =========================================================
+   DEBUG
+   ========================================================= */
+
+      console.log('========== CLAIM HISTORY RESULT ==========');
+
+      console.log('Duplicate Claim Flag:', bh.local.duplicateClaimFlag);
+
+      console.log('Duplicate Claim ID:', bh.local.duplicateClaimId);
+
+      console.log('Duplicate Claim Number:', bh.local.duplicateClaimNumber);
+
+      console.log('Prior Claims 12M:', bh.local.priorClaims12m);
+
+      console.log('Prior Claims Valid:', bh.local.priorClaimsValid);
+
+      console.log('==========================================');
       this.tracerService.sendData(spanInst, bh);
       bh = await this.sd_WsQyWnZwjTB0WuRN(bh, parentSpanInst);
       //appendnew_next_duplicateClaimResponse
@@ -2098,7 +2259,11 @@ export class Claim {
 
         suspiciousPatternFlag: !!bh.local.suspiciousPatternFlag,
 
+        mandatoryDocsComplete: false,
+
         priorClaims12m: Number(bh.local.priorClaims12m || 0),
+
+        priorClaimsValid: !!bh.local.priorClaimsValid,
 
         /* =====================================================
        11. WORKFLOW CONTEXT
@@ -2463,7 +2628,7 @@ export class Claim {
         method: 'post',
         headers: bh.local.caseCreationHeaders,
         followRedirects: false,
-        cookies: {},
+        cookies: undefined,
         authType: undefined,
         body: bh.local.caseCreationBody,
         paytoqs: false,

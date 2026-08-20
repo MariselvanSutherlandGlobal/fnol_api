@@ -1131,7 +1131,7 @@
         },
         "functionName": "sd_f25NqaHFj386lYIb",
         "category": "HTTP",
-        "x": 3605,
+        "x": 4125,
         "y": 140,
         "wires": [],
         "__n_excludedFromValidation__": {},
@@ -1315,7 +1315,7 @@
         "outputs": 2,
         "functionName": "sd_WsQyWnZwjTB0WuRN",
         "category": "Function",
-        "x": 1345,
+        "x": 1765,
         "y": 220,
         "wires": [
             [
@@ -1375,7 +1375,7 @@
         },
         "functionName": "policyNotFoundError",
         "category": "HTTP",
-        "x": 1465,
+        "x": 1985,
         "y": 120,
         "wires": [],
         "__n_excludedFromValidation__": {},
@@ -1393,7 +1393,7 @@
         "script": "const policyId =\n    bh.local.verifiedPolicyId;\n\n\n/* =========================================================\n   CLAIM INSERT SQL\n   ========================================================= */\n\nbh.local.claimSql = `\n    INSERT INTO claims (\n        claim_number,\n        policy_id,\n        claimant_type,\n        loss_date_time,\n        loss_location,\n        loss_type,\n        loss_description,\n        driver_name,\n        driver_licence_status,\n        police_report_available,\n        police_report_reference,\n        repair_estimate_available,\n        estimated_loss_amount,\n        currency,\n        vehicle_drivable,\n        third_party_involved,\n        injury_involved,\n        preferred_contact_method,\n        preferred_contact_value,\n        status,\n        created_by\n    )\n    VALUES (\n        'CLM' ||\n        TO_CHAR(CURRENT_DATE, 'YYYYMMDD') ||\n        LPAD(\n            nextval('claim_number_seq')::TEXT,\n            6,\n            '0'\n        ),\n\n        $1,\n        $2,\n        $3,\n        $4,\n        $5,\n        $6,\n        $7,\n        $8,\n        $9,\n        $10,\n        $11,\n        $12,\n        $13,\n        $14,\n        $15,\n        $16,\n        $17,\n        $18,\n\n        'FNOL_SUBMITTED',\n\n        $19\n    )\n    RETURNING\n        id,\n        claim_number,\n        policy_id,\n        status,\n        created_at;\n`;\n\n\n/* =========================================================\n   SQL PARAMETERS\n   ========================================================= */\n\nbh.local.claimSqlParams = [\n\n    /* $1 */\n    policyId,\n\n    /* $2 */\n    bh.local.claimantType,\n\n    /* $3 */\n    bh.local.lossDateTime,\n\n    /* $4 */\n    bh.local.lossLocation,\n\n    /* $5 */\n    bh.local.lossType,\n\n    /* $6 */\n    bh.local.lossDescription,\n\n    /* $7 */\n    bh.local.driverName,\n\n    /* $8 */\n    bh.local.driverLicenceStatus,\n\n    /* $9 */\n    bh.local.policeReportAvailable,\n\n    /* $10 */\n    bh.local.policeReportReference,\n\n    /* $11 */\n    bh.local.repairEstimateAvailable,\n\n    /* $12 */\n    bh.local.estimatedLossAmount,\n\n    /* $13 */\n    bh.local.currency,\n\n    /* $14 */\n    bh.local.vehicleDrivable,\n\n    /* $15 */\n    bh.local.thirdPartyInvolved,\n\n    /* $16 */\n    bh.local.injuryInvolved,\n\n    /* $17 */\n    bh.local.preferredContactMethod,\n\n    /* $18 */\n    bh.local.preferredContactValue,\n\n    /* $19 */\n    bh.local.createdBy\n];\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM INSERT PREPARED ==========\"\n);\n\nconsole.log(\n    \"Policy ID:\",\n    policyId\n);\n\nconsole.log(\n    \"Repair Estimate Available:\",\n    bh.local.repairEstimateAvailable\n);\n\nconsole.log(\n    \"SQL Parameter Count:\",\n    bh.local.claimSqlParams.length\n);\n\nconsole.log(\n    \"Claim SQL Params:\",\n    JSON.stringify(\n        bh.local.claimSqlParams,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"============================================\"\n);",
         "functionName": "claimPrepareSql",
         "category": "Function",
-        "x": 1465,
+        "x": 1905,
         "y": 220,
         "wires": [
             [
@@ -1433,7 +1433,7 @@
         "dbType": "postgres",
         "functionName": "claimSql",
         "category": "Storage",
-        "x": 1565,
+        "x": 2005,
         "y": 220,
         "wires": [
             [
@@ -1455,7 +1455,7 @@
         "script": "const body = bh.input.body || {};\n\nconst evidence = body.evidence || [];\n\nbh.local.evidence = evidence;\n\nbh.local.hasEvidence =\n    Array.isArray(evidence) &&\n    evidence.length > 0;\n\nconsole.log(\"Evidence received:\", evidence);\nconsole.log(\"Has evidence:\", bh.local.hasEvidence);\n",
         "functionName": "prepareEvidence",
         "category": "Function",
-        "x": 1965,
+        "x": 2485,
         "y": 220,
         "wires": [
             [
@@ -1477,7 +1477,7 @@
         "script": "const claimResult = bh.local.claimResult || [];\n\nconsole.log(\"========== CLAIM RESULT ==========\");\nconsole.log(claimResult);\n\nif (!Array.isArray(claimResult) || claimResult.length === 0) {\n\n    bh.local.claimCreated = false;\n\n    bh.local.responseStatus = 500;\n\n    bh.local.response = {\n        success: false,\n        message: \"Claim creation failed. No claim record was returned.\"\n    };\n\n} else {\n\n    const claim = claimResult[0];\n\n    bh.local.claimCreated = true;\n\n    bh.local.claim = claim;\n\n    bh.local.claimId = claim.id;\n    bh.local.claimNumber = claim.claim_number;\n    bh.local.claimPolicyId = claim.policy_id;\n    bh.local.claimStatus = claim.status;\n    bh.local.claimCreatedAt = claim.created_at;\n\n    console.log(\"Claim created successfully\");\n    console.log(\"Claim ID:\", bh.local.claimId);\n    console.log(\"Claim Number:\", bh.local.claimNumber);\n    console.log(\"Policy ID:\", bh.local.claimPolicyId);\n    console.log(\"Claim Status:\", bh.local.claimStatus);\n}",
         "functionName": "checkClaimResult",
         "category": "Function",
-        "x": 1665,
+        "x": 2145,
         "y": 220,
         "wires": [
             [
@@ -1512,7 +1512,7 @@
         "outputs": 2,
         "functionName": "sd_eRe9r9GGo2Zv4BL8",
         "category": "Function",
-        "x": 1765,
+        "x": 2285,
         "y": 220,
         "wires": [
             [
@@ -1572,7 +1572,7 @@
         },
         "functionName": "unabletoCreateClaimError",
         "category": "HTTP",
-        "x": 1925,
+        "x": 2445,
         "y": 100,
         "wires": [],
         "__n_excludedFromValidation__": {},
@@ -1603,7 +1603,7 @@
         "outputs": 2,
         "functionName": "sd_XRponF5hISX6HJeZ",
         "category": "Function",
-        "x": 2085,
+        "x": 2605,
         "y": 220,
         "wires": [
             [
@@ -1628,7 +1628,7 @@
         "script": "/* =========================================================\n * CASE CREATION RESPONSE\n * ========================================================= */\n\n\n/* ---------------------------------------------------------\n * Default HTTP response status\n *\n * Always set this so the final response never receives\n * an undefined HTTP status code.\n * --------------------------------------------------------- */\n\nbh.local.responseStatus = 200;\n\n\n/* ---------------------------------------------------------\n * Get raw case creation response\n * --------------------------------------------------------- */\n\nconst rawCaseResponse =\n    bh.local.caseCreationResponse || {};\n\n\n/* ---------------------------------------------------------\n * Normalize payload\n * --------------------------------------------------------- */\n\nconst caseResponse =\n    rawCaseResponse &&\n    rawCaseResponse.payload &&\n    typeof rawCaseResponse.payload === \"object\"\n        ? rawCaseResponse.payload\n        : rawCaseResponse;\n\n\n/* ---------------------------------------------------------\n * Store normalized response\n * --------------------------------------------------------- */\n\nbh.local.caseCreationResponse =\n    caseResponse;\n\n\n/* =========================================================\n * EXTRACT CASE ID\n * ========================================================= */\n\nbh.local.caseId =\n    caseResponse.caseId ||\n\n    caseResponse.id ||\n\n    caseResponse.caseInstanceId ||\n\n    (\n        caseResponse.case &&\n        (\n            caseResponse.case.caseId ||\n\n            caseResponse.case.id ||\n\n            caseResponse.case.caseInstanceId\n        )\n    ) ||\n\n    null;\n\n\n/* =========================================================\n * DETERMINE SUCCESS\n * ========================================================= */\n\nbh.local.caseCreated =\n    !!(\n        bh.local.caseId ||\n\n        caseResponse.success === true ||\n\n        caseResponse.status === \"SUCCESS\"\n    );\n\n\n/* =========================================================\n * DETERMINE RESPONSE STATUS\n * ========================================================= */\n\nif (bh.local.caseCreated) {\n\n    bh.local.responseStatus = 200;\n\n}\nelse {\n\n    bh.local.responseStatus = 500;\n\n}\n\n\n/* =========================================================\n * FINAL RESPONSE BODY\n * ========================================================= */\n\nbh.local.response =\n    caseResponse;\n\n\n/* =========================================================\n * DEBUG\n * ========================================================= */\n\nconsole.log(\n    \"========== CASE CREATION RESPONSE ==========\"\n);\n\nconsole.log(\n    \"Raw Case Response:\",\n    JSON.stringify(\n        rawCaseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Normalized Case Response:\",\n    JSON.stringify(\n        caseResponse,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case ID:\",\n    bh.local.caseId\n);\n\nconsole.log(\n    \"Case Created:\",\n    bh.local.caseCreated\n);\n\nconsole.log(\n    \"Response Status:\",\n    bh.local.responseStatus\n);\n\nconsole.log(\n    \"Response Body:\",\n    JSON.stringify(\n        bh.local.response,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"=============================================\"\n);",
         "functionName": "finalResponseScript",
         "category": "Function",
-        "x": 3385,
+        "x": 3905,
         "y": 140,
         "wires": [
             [
@@ -1650,7 +1650,7 @@
         "script": "const evidence = bh.local.evidence || [];\n\nbh.local.dmsFiles = evidence.map(file => ({\n    claimId: bh.local.claimId,\n    documentType: file.documentType,\n    fileName: file.fileName || file.name,\n    mimeType: file.mimeType || file.type,\n    fileSize: file.fileSize || file.size,\n    file: file.file\n}));\n\nbh.local.dmsFileCount = bh.local.dmsFiles.length;\n\nconsole.log(\"DMS files prepared:\", bh.local.dmsFiles);\n",
         "functionName": "prepareDmsUpload",
         "category": "Function",
-        "x": 2225,
+        "x": 2745,
         "y": 260,
         "wires": [
             []
@@ -1667,10 +1667,10 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "prepareCaseCreation",
-        "script": "const policy =\n    bh.local.policy || {};\n\nconst claim =\n    bh.local.claim || {};\n\n\n/* =========================================================\n   CASE CREATION URL\n   ========================================================= */\n\nconst BASE_URL =\n    bh.system.environment.CASE_SERVICE_BASE_URL;\n\nbh.local.caseCreationUrl =\n    (BASE_URL || \"\").replace(/\\/+$/, \"\") +\n    \"/caseservice/case/instance/create?branch=main\";\n\n\n/* =========================================================\n   VERIFIED IDENTIFIERS\n   ========================================================= */\n\nconst claimId =\n    Number(\n        bh.local.claimId ||\n        claim.id ||\n        0\n    );\n\nconst claimNumber =\n    bh.local.claimNumber ||\n    claim.claim_number ||\n    \"\";\n\nconst policyId =\n    Number(\n        bh.local.claimPolicyId ||\n        bh.local.verifiedPolicyId ||\n        policy.id ||\n        0\n    );\n\nconst policyNumber =\n    bh.local.policyNumber ||\n    policy.policy_number ||\n    \"\";\n\n\n/* =========================================================\n   COMMON CASE / WORKFLOW DATA\n   =========================================================\n *\n * IMPORTANT:\n *\n * caseData and wfData are intentionally created from\n * this SAME object.\n *\n * This prevents caseData and wfData from becoming\n * different when a field is added/removed later.\n *\n * Only SOURCE FACTS are sent here.\n *\n * Reëls calculated outputs such as:\n *   policyAgeDays\n *   lossDateWithinPolicyPeriod\n *   claimAmountWithinCoverage\n *   eligibilityValid\n *   recommendation\n *   stpEligible\n *   fraudRiskBand\n *   complexityBand\n *   authorityBand\n *\n * are NOT created here.\n * ========================================================= */\n\nconst commonCaseData = {\n\n\n    /* =====================================================\n       1. CLAIM / POLICY IDENTITY\n       ===================================================== */\n\n    claimId:\n        claimId,\n\n    claimNumber:\n        claimNumber,\n\n    policyId:\n        policyId,\n\n    policyNumber:\n        policyNumber,\n\n\n    /* =====================================================\n       2. FNOL / CLAIM DETAILS\n       ===================================================== */\n\n    claimantType:\n        bh.local.claimantType,\n\n    lossDateTime:\n        bh.local.lossDateTime,\n\n    lossLocation:\n        bh.local.lossLocation,\n\n    lossType:\n        bh.local.lossType,\n\n    lossDescription:\n        bh.local.lossDescription || \"\",\n\n\n    /* =====================================================\n       3. DRIVER\n       ===================================================== */\n\n    driverName:\n        bh.local.driverName || null,\n\n    driverLicenceStatus:\n        bh.local.driverLicenceStatus || null,\n\n\n    /* =====================================================\n       4. POLICE / REPAIR INFORMATION\n       ===================================================== */\n\n    policeReportAvailable:\n        !!bh.local.policeReportAvailable,\n\n    policeReportReference:\n        bh.local.policeReportReference || \"\",\n\n    repairEstimateAvailable:\n        !!bh.local.repairEstimateAvailable,\n\n\n    /* =====================================================\n       5. FINANCIAL\n       ===================================================== */\n\n    estimatedLossAmount:\n        Number(\n            bh.local.estimatedLossAmount || 0\n        ),\n\n    currency:\n        bh.local.currency ||\n        policy.currency ||\n        \"INR\",\n\n\n    /* =====================================================\n       6. INCIDENT\n       ===================================================== */\n\n    vehicleDrivable:\n        !!bh.local.vehicleDrivable,\n\n    thirdPartyInvolved:\n        !!bh.local.thirdPartyInvolved,\n\n    injuryInvolved:\n        !!bh.local.injuryInvolved,\n\n\n    /* =====================================================\n       7. CONTACT\n       ===================================================== */\n\n    preferredContactMethod:\n        bh.local.preferredContactMethod || null,\n\n    preferredContactValue:\n        bh.local.preferredContactValue || \"\",\n\n\n    /* =====================================================\n       8. SYSTEM\n       ===================================================== */\n\n    createdBy:\n        bh.local.createdBy ||\n        \"FNOL_USER\",\n\n\n    /* =====================================================\n       9. POLICY FACTS FROM POSTGRES\n       ===================================================== */\n\n    policyStatus:\n        policy.policy_status || \"\",\n\n    policyStartDate:\n        policy.policy_start_date || \"\",\n\n    policyEndDate:\n        policy.policy_end_date || \"\",\n\n    coverageType:\n        policy.coverage_type || \"\",\n\n    coveredPerils:\n        policy.covered_perils || [],\n\n    sumInsured:\n        Number(\n            policy.sum_insured || 0\n        ),\n\n    excessAmount:\n        Number(\n            policy.excess_amount || 0\n        ),\n\n\n    /* =====================================================\n       10. RISK / CLAIM HISTORY SOURCE FACTS\n       ===================================================== */\n\n    fraudScore:\n        Number(\n            bh.local.fraudScore || 0\n        ),\n\n    duplicateClaimFlag:\n        !!bh.local.duplicateClaimFlag,\n\n    blacklistedEntityFlag:\n        !!bh.local.blacklistedEntityFlag,\n\n    suspiciousPatternFlag:\n        !!bh.local.suspiciousPatternFlag,\n\n    priorClaims12m:\n        Number(\n            bh.local.priorClaims12m || 0\n        ),\n\n\n    /* =====================================================\n       11. WORKFLOW CONTEXT\n       ===================================================== */\n\n    manualReviewOverride:\n        !!bh.local.manualReviewOverride\n};\n\n\n/* =========================================================\n   CASE CREATION REQUEST\n   =========================================================\n *\n * caseData and wfData contain EXACTLY the same values.\n * ========================================================= */\n\nbh.local.caseCreationRequest = {\n\n    caseType:\n        \"fnol_claim\",\n\n    caseData:\n        commonCaseData,\n\n    wfData:\n        JSON.parse(\n            JSON.stringify(\n                commonCaseData\n            )\n        )\n};\n\n\n/* =========================================================\n   CASE CREATION BODY\n   ========================================================= */\n\nbh.local.caseCreationBody =\n    JSON.stringify(\n        bh.local.caseCreationRequest\n    );\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CASE CREATION PREPARED ==========\"\n);\n\nconsole.log(\n    \"Case Creation URL:\",\n    bh.local.caseCreationUrl\n);\n\nconsole.log(\n    \"Case ID:\",\n    claimId\n);\n\nconsole.log(\n    \"Policy ID:\",\n    policyId\n);\n\nconsole.log(\n    \"Duplicate Claim:\",\n    bh.local.duplicateClaimFlag\n);\n\nconsole.log(\n    \"Repair Estimate Available:\",\n    bh.local.repairEstimateAvailable\n);\n\nconsole.log(\n    \"Case Data:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.caseData,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"WF Data:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.wfData,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case Data / WF Data identical:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.caseData\n    ) ===\n    JSON.stringify(\n        bh.local.caseCreationRequest.wfData\n    )\n);\n\nconsole.log(\n    \"============================================\"\n);",
+        "script": "const policy =\n    bh.local.policy || {};\n\nconst claim =\n    bh.local.claim || {};\n\n\n/* =========================================================\n   CASE CREATION URL\n   ========================================================= */\n\nconst BASE_URL =\n    bh.system.environment.CASE_SERVICE_BASE_URL;\n\nbh.local.caseCreationUrl =\n    (BASE_URL || \"\").replace(/\\/+$/, \"\") +\n    \"/caseservice/case/instance/create?branch=main\";\n\n\n/* =========================================================\n   VERIFIED IDENTIFIERS\n   ========================================================= */\n\nconst claimId =\n    Number(\n        bh.local.claimId ||\n        claim.id ||\n        0\n    );\n\nconst claimNumber =\n    bh.local.claimNumber ||\n    claim.claim_number ||\n    \"\";\n\nconst policyId =\n    Number(\n        bh.local.claimPolicyId ||\n        bh.local.verifiedPolicyId ||\n        policy.id ||\n        0\n    );\n\nconst policyNumber =\n    bh.local.policyNumber ||\n    policy.policy_number ||\n    \"\";\n\n\n/* =========================================================\n   COMMON CASE / WORKFLOW DATA\n   =========================================================\n *\n * IMPORTANT:\n *\n * caseData and wfData are intentionally created from\n * this SAME object.\n *\n * This prevents caseData and wfData from becoming\n * different when a field is added/removed later.\n *\n * Only SOURCE FACTS are sent here.\n *\n * Reëls calculated outputs such as:\n *   policyAgeDays\n *   lossDateWithinPolicyPeriod\n *   claimAmountWithinCoverage\n *   eligibilityValid\n *   recommendation\n *   stpEligible\n *   fraudRiskBand\n *   complexityBand\n *   authorityBand\n *\n * are NOT created here.\n * ========================================================= */\n\nconst commonCaseData = {\n\n\n    /* =====================================================\n       1. CLAIM / POLICY IDENTITY\n       ===================================================== */\n\n    claimId:\n        claimId,\n\n    claimNumber:\n        claimNumber,\n\n    policyId:\n        policyId,\n\n    policyNumber:\n        policyNumber,\n\n\n    /* =====================================================\n       2. FNOL / CLAIM DETAILS\n       ===================================================== */\n\n    claimantType:\n        bh.local.claimantType,\n\n    lossDateTime:\n        bh.local.lossDateTime,\n\n    lossLocation:\n        bh.local.lossLocation,\n\n    lossType:\n        bh.local.lossType,\n\n    lossDescription:\n        bh.local.lossDescription || \"\",\n\n\n    /* =====================================================\n       3. DRIVER\n       ===================================================== */\n\n    driverName:\n        bh.local.driverName || null,\n\n    driverLicenceStatus:\n        bh.local.driverLicenceStatus || null,\n\n\n    /* =====================================================\n       4. POLICE / REPAIR INFORMATION\n       ===================================================== */\n\n    policeReportAvailable:\n        !!bh.local.policeReportAvailable,\n\n    policeReportReference:\n        bh.local.policeReportReference || \"\",\n\n    repairEstimateAvailable:\n        !!bh.local.repairEstimateAvailable,\n\n\n    /* =====================================================\n       5. FINANCIAL\n       ===================================================== */\n\n    estimatedLossAmount:\n        Number(\n            bh.local.estimatedLossAmount || 0\n        ),\n\n    currency:\n        bh.local.currency ||\n        policy.currency ||\n        \"INR\",\n\n\n    /* =====================================================\n       6. INCIDENT\n       ===================================================== */\n\n    vehicleDrivable:\n        !!bh.local.vehicleDrivable,\n\n    thirdPartyInvolved:\n        !!bh.local.thirdPartyInvolved,\n\n    injuryInvolved:\n        !!bh.local.injuryInvolved,\n\n\n    /* =====================================================\n       7. CONTACT\n       ===================================================== */\n\n    preferredContactMethod:\n        bh.local.preferredContactMethod || null,\n\n    preferredContactValue:\n        bh.local.preferredContactValue || \"\",\n\n\n    /* =====================================================\n       8. SYSTEM\n       ===================================================== */\n\n    createdBy:\n        bh.local.createdBy ||\n        \"FNOL_USER\",\n\n\n    /* =====================================================\n       9. POLICY FACTS FROM POSTGRES\n       ===================================================== */\n\n    policyStatus:\n        policy.policy_status || \"\",\n\n    policyStartDate:\n        policy.policy_start_date || \"\",\n\n    policyEndDate:\n        policy.policy_end_date || \"\",\n\n    coverageType:\n        policy.coverage_type || \"\",\n\n    coveredPerils:\n        policy.covered_perils || [],\n\n    sumInsured:\n        Number(\n            policy.sum_insured || 0\n        ),\n\n    excessAmount:\n        Number(\n            policy.excess_amount || 0\n        ),\n\n\n    /* =====================================================\n       10. RISK / CLAIM HISTORY SOURCE FACTS\n       ===================================================== */\n\n    fraudScore:\n        Number(\n            bh.local.fraudScore || 0\n        ),\n\n    duplicateClaimFlag:\n        !!bh.local.duplicateClaimFlag,\n\n    blacklistedEntityFlag:\n        !!bh.local.blacklistedEntityFlag,\n\n    suspiciousPatternFlag:\n        !!bh.local.suspiciousPatternFlag,\n\n    mandatoryDocsComplete:\n        false,\n\n   priorClaims12m:\n    Number(\n        bh.local.priorClaims12m || 0\n    ),\n\n    priorClaimsValid:\n        !!bh.local.priorClaimsValid,\n\n    /* =====================================================\n       11. WORKFLOW CONTEXT\n       ===================================================== */\n\n    manualReviewOverride:\n        !!bh.local.manualReviewOverride\n};\n\n\n/* =========================================================\n   CASE CREATION REQUEST\n   =========================================================\n *\n * caseData and wfData contain EXACTLY the same values.\n * ========================================================= */\n\nbh.local.caseCreationRequest = {\n\n    caseType:\n        \"fnol_claim\",\n\n    caseData:\n        commonCaseData,\n\n    wfData:\n        JSON.parse(\n            JSON.stringify(\n                commonCaseData\n            )\n        )\n};\n\n\n/* =========================================================\n   CASE CREATION BODY\n   ========================================================= */\n\nbh.local.caseCreationBody =\n    JSON.stringify(\n        bh.local.caseCreationRequest\n    );\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CASE CREATION PREPARED ==========\"\n);\n\nconsole.log(\n    \"Case Creation URL:\",\n    bh.local.caseCreationUrl\n);\n\nconsole.log(\n    \"Case ID:\",\n    claimId\n);\n\nconsole.log(\n    \"Policy ID:\",\n    policyId\n);\n\nconsole.log(\n    \"Duplicate Claim:\",\n    bh.local.duplicateClaimFlag\n);\n\nconsole.log(\n    \"Repair Estimate Available:\",\n    bh.local.repairEstimateAvailable\n);\n\nconsole.log(\n    \"Case Data:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.caseData,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"WF Data:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.wfData,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"Case Data / WF Data identical:\",\n    JSON.stringify(\n        bh.local.caseCreationRequest.caseData\n    ) ===\n    JSON.stringify(\n        bh.local.caseCreationRequest.wfData\n    )\n);\n\nconsole.log(\n    \"============================================\"\n);",
         "functionName": "prepareCaseCreation",
         "category": "Function",
-        "x": 2365,
+        "x": 2885,
         "y": 140,
         "wires": [
             [
@@ -1690,7 +1690,6 @@
         "nodeType": "flow",
         "name": "createFNOLCase",
         "method": "post",
-        "methodMapping": "",
         "methodMappingObj": {},
         "urlMapping": "bh.local.caseCreationUrl",
         "urlMappingObj": {
@@ -1698,7 +1697,6 @@
             "mapVarValue": "caseCreationUrl"
         },
         "ret": "json",
-        "retMapping": "",
         "retMappingObj": {},
         "reqBody": "bh.local.caseCreationBody",
         "reqBodyObj": {
@@ -1710,8 +1708,6 @@
             "mapVarType": "bh.local",
             "mapVarValue": "caseCreationResponse"
         },
-        "headers": [],
-        "headersObj": {},
         "headerMapping": "bh.local.caseCreationHeaders",
         "headerMappingObj": {
             "mapVarType": "bh.local",
@@ -1719,12 +1715,8 @@
         },
         "params": {},
         "paramsObj": [],
-        "paramMapping": "",
         "paramMappingObj": {},
-        "authType": "",
         "useAuthTypeMappingObj": {},
-        "useAuthTypeMap": {},
-        "useAuthType": "",
         "useAuthUsername": "",
         "useAuthUsernameMappingObj": {},
         "useAuthPassword": "",
@@ -1743,7 +1735,6 @@
         "proxy": "",
         "useProxy": false,
         "usetls": false,
-        "cookies": [],
         "cookiesMapObj": {},
         "cookiesList": {},
         "switchStates": {
@@ -1756,7 +1747,7 @@
         },
         "functionName": "createFnolCase",
         "category": "HTTP",
-        "x": 3225,
+        "x": 3745,
         "y": 140,
         "wires": [
             [
@@ -1845,7 +1836,7 @@
         },
         "functionName": "getCaseServiceToken",
         "category": "HTTP",
-        "x": 2700,
+        "x": 3220,
         "y": 140,
         "wires": [
             [
@@ -1867,7 +1858,7 @@
         "script": "const rawTokenResponse =\n    bh.local.caseTokenResponse || {};\n\n\nconst tokenResponse =\n    rawTokenResponse &&\n    rawTokenResponse.payload &&\n    typeof rawTokenResponse.payload === \"object\"\n        ? rawTokenResponse.payload\n        : rawTokenResponse;\n\n\nconsole.log(\n    \"========== CASE TOKEN RESPONSE ==========\"\n);\n\nconsole.log(\n    JSON.stringify(\n        tokenResponse,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   VALIDATE TOKEN\n   ========================================================= */\n\nif (\n    !tokenResponse.access_token ||\n    typeof tokenResponse.access_token !== \"string\" ||\n    !tokenResponse.access_token.trim()\n) {\n\n    bh.local.caseTokenSuccess = false;\n\n    bh.local.caseAccessToken = \"\";\n\n    bh.local.caseCreationReady = false;\n\n    console.error(\n        \"Case Service authentication failed: access token missing.\"\n    );\n\n} else {\n\n    bh.local.caseTokenSuccess = true;\n\n    bh.local.caseAccessToken =\n        tokenResponse.access_token.trim();\n\n    bh.local.caseCreationReady = true;\n\n    console.log(\n        \"Case Service authentication successful.\"\n    );\n\n    console.log(\n        \"Access token received:\",\n        true\n    );\n}\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"Case Token Success:\",\n    bh.local.caseTokenSuccess\n);\n\nconsole.log(\n    \"Case Creation Ready:\",\n    bh.local.caseCreationReady\n);\n\nconsole.log(\n    \"==========================================\"\n);",
         "functionName": "tokenResponse",
         "category": "Function",
-        "x": 2820,
+        "x": 3340,
         "y": 140,
         "wires": [
             [
@@ -1889,7 +1880,7 @@
         "script": "const CLIENT_ID =\n    bh.system.environment.CASE_SERVICE_CLIENT_ID;\n\nconst CLIENT_SECRET =\n    bh.system.environment.CASE_SERVICE_CLIENT_SECRET;\n\n\n/* =========================================================\n   TOKEN URL\n   ========================================================= */\n\nbh.local.caseTokenUrl =\n    \"https://ids-ctr-pt.neutrinos-apps.com/token\";\n\n\n/* =========================================================\n   TOKEN BODY\n   ========================================================= */\n\nbh.local.caseTokenBody =\n    \"grant_type=client_credentials&client_id=\" +\n    encodeURIComponent(CLIENT_ID) +\n    \"&client_secret=\" +\n    encodeURIComponent(CLIENT_SECRET);\n\n\n/* =========================================================\n   TOKEN HEADERS\n   ========================================================= */\n\nbh.local.caseTokenHeaders = {\n\n    \"Content-Type\":\n        \"application/x-www-form-urlencoded\"\n};\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CASE TOKEN REQUEST ==========\"\n);\n\nconsole.log(\n    \"URL:\",\n    bh.local.caseTokenUrl\n);\n\nconsole.log(\n    \"Body:\",\n    bh.local.caseTokenBody\n);\n\nconsole.log(\n    \"Headers:\",\n    JSON.stringify(\n        bh.local.caseTokenHeaders,\n        null,\n        2\n    )\n);\n\nconsole.log(\n    \"=========================================\"\n);",
         "functionName": "getCaseServiceTokenScript",
         "category": "Function",
-        "x": 2525,
+        "x": 3045,
         "y": 140,
         "wires": [
             [
@@ -1911,7 +1902,7 @@
         "script": "/* =========================================================\n   PREPARE CASE CREATION HTTP REQUEST\n   ========================================================= */\n\nif (\n    !bh.local.caseAccessToken ||\n    typeof bh.local.caseAccessToken !== \"string\" ||\n    !bh.local.caseAccessToken.trim()\n) {\n\n    bh.local.caseCreationReady = false;\n\n    console.error(\n        \"CASE CREATION STOPPED: access token missing.\"\n    );\n\n} else {\n\n    /* =====================================================\n       URL\n       ===================================================== */\n\n    const BASE_URL =\n        bh.system.environment.CASE_SERVICE_BASE_URL;\n\n\n    bh.local.caseCreationUrl =\n        (BASE_URL || \"\").replace(/\\/+$/, \"\") +\n        \"/caseservice/case/instance/create?branch=main\";\n\n\n    /* =====================================================\n       HEADERS\n       ===================================================== */\n\n    bh.local.caseCreationHeaders = {\n\n        \"Authorization\":\n            \"Bearer \" +\n            bh.local.caseAccessToken.trim(),\n\n        \"Content-Type\":\n            \"application/json\",\n\n        \"Accept\":\n            \"application/json\"\n    };\n\n\n    /* =====================================================\n       BODY\n       ===================================================== */\n\n    bh.local.caseCreationBody =\n        JSON.stringify(\n            bh.local.caseCreationRequest\n        );\n\n\n    bh.local.caseCreationReady = true;\n\n\n    /* =====================================================\n       DEBUG\n       ===================================================== */\n\n    console.log(\n        \"========== CASE CREATION HTTP REQUEST ==========\"\n    );\n\n    console.log(\n        \"URL:\",\n        bh.local.caseCreationUrl\n    );\n\n    console.log(\n        \"Headers:\",\n        JSON.stringify(\n            bh.local.caseCreationHeaders,\n            null,\n            2\n        )\n    );\n\n    console.log(\n        \"Body:\",\n        bh.local.caseCreationBody\n    );\n\n    console.log(\n        \"Ready:\",\n        bh.local.caseCreationReady\n    );\n\n    console.log(\n        \"=================================================\"\n    );\n}",
         "functionName": "createFnolCaseScript",
         "category": "Function",
-        "x": 3005,
+        "x": 3525,
         "y": 140,
         "wires": [
             [
@@ -1929,12 +1920,12 @@
         "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
         "viewType": "common",
         "nodeType": "flow",
-        "name": "DuplicateClaimCheck",
-        "script": "/* =========================================================\n   DUPLICATE CLAIM CHECK\n   ========================================================= */\n\n/*\n   Duplicate definition for POC:\n\n   Same policy\n   + same loss type\n   + same loss date\n   + similar claim amount\n\n   We check existing claims BEFORE inserting the\n   current claim.\n*/\n\n\nconst policyId =\n    Number(\n        bh.local.verifiedPolicyId ||\n        bh.local.policyId ||\n        0\n    );\n\nconst lossDateTime =\n    bh.local.lossDateTime;\n\nconst lossType =\n    bh.local.lossType;\n\nconst estimatedLossAmount =\n    Number(\n        bh.local.estimatedLossAmount || 0\n    );\n\n\n/* =========================================================\n   DEFAULT\n   ========================================================= */\n\nbh.local.duplicateClaimFlag = false;\n\nbh.local.duplicateClaimId = null;\n\nbh.local.duplicateClaimNumber = null;\n\n\n/* =========================================================\n   VALIDATION\n   ========================================================= */\n\nif (\n    !policyId ||\n    !lossDateTime ||\n    !lossType\n) {\n\n    console.log(\n        \"Duplicate check skipped - required values missing\"\n    );\n\n}\nelse {\n\n    /* =====================================================\n       DUPLICATE SQL\n\n       Same:\n       - policy\n       - loss type\n       - loss date\n       - approximately same amount\n\n       Same calendar date is used instead of exact timestamp.\n       ===================================================== */\n\n    bh.local.duplicateClaimSql = `\n        SELECT\n            id,\n            claim_number\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_type = $2\n          AND DATE(loss_date_time) = DATE($3::timestamp)\n          AND ABS(\n                COALESCE(estimated_loss_amount, 0)\n                - $4\n              ) <= 1\n        ORDER BY id DESC\n        LIMIT 1;\n    `;\n\n\n    bh.local.duplicateClaimSqlParams = [\n\n        policyId,\n\n        lossType,\n\n        lossDateTime,\n\n        estimatedLossAmount\n\n    ];\n\n\n    console.log(\n        \"========== DUPLICATE CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Loss Type:\",\n        lossType\n    );\n\n    console.log(\n        \"Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Estimated Amount:\",\n        estimatedLossAmount\n    );\n\n    console.log(\n        \"Duplicate SQL:\",\n        bh.local.duplicateClaimSql\n    );\n\n    console.log(\n        \"======================================\"\n    );\n}",
-        "functionName": "duplicateClaimCheck",
+        "name": "DuplicateAndPriorClaimCheck",
+        "script": "/* =========================================================\n   DUPLICATE CLAIM CHECK + PRIOR CLAIMS COUNT\n   ========================================================= */\n\n/*\n   DUPLICATE DEFINITION FOR POC:\n\n   Same policy\n   + same loss type\n   + same loss date\n   + similar claim amount\n\n   PRIOR CLAIMS DEFINITION FOR POC:\n\n   Same policy\n   + claims in the previous 12 months\n   + claim loss date BEFORE current claim loss date\n\n   The current claim is checked BEFORE insertion.\n*/\n\n\n/* =========================================================\n   INPUTS\n   ========================================================= */\n\nconst policyId =\n    Number(\n        bh.local.verifiedPolicyId ||\n        bh.local.policyId ||\n        0\n    );\n\nconst lossDateTime =\n    bh.local.lossDateTime;\n\nconst lossType =\n    bh.local.lossType;\n\nconst estimatedLossAmount =\n    Number(\n        bh.local.estimatedLossAmount || 0\n    );\n\n\n/* =========================================================\n   DEFAULT VALUES\n   ========================================================= */\n\nbh.local.duplicateClaimFlag = false;\n\nbh.local.duplicateClaimId = null;\n\nbh.local.duplicateClaimNumber = null;\n\n\n/*\n   IMPORTANT:\n   Default prior claim count is 0.\n*/\nbh.local.priorClaims12m = 0;\n\n\n/* =========================================================\n   VALIDATION\n   ========================================================= */\n\nif (\n    !policyId ||\n    !lossDateTime ||\n    !lossType\n) {\n\n    console.log(\n        \"Duplicate check skipped - required values missing\"\n    );\n\n}\nelse {\n\n    /* =====================================================\n       DUPLICATE CLAIM SQL\n\n       Same:\n       - policy\n       - loss type\n       - loss date\n       - approximately same amount\n\n       Same calendar date is used instead of exact timestamp.\n       ===================================================== */\n\n    bh.local.duplicateClaimSql = `\n        SELECT\n            id,\n            claim_number\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_type = $2\n          AND DATE(loss_date_time) = DATE($3::timestamp)\n          AND ABS(\n                COALESCE(estimated_loss_amount, 0)\n                - $4\n              ) <= 1\n        ORDER BY id DESC\n        LIMIT 1;\n    `;\n\n\n    bh.local.duplicateClaimSqlParams = [\n\n        policyId,\n\n        lossType,\n\n        lossDateTime,\n\n        estimatedLossAmount\n\n    ];\n\n\n    /* =====================================================\n       PRIOR CLAIMS COUNT - PREVIOUS 12 MONTHS\n\n       Count existing claims for the same policy where:\n\n       loss_date_time >= current loss date - 12 months\n\n       AND\n\n       loss_date_time < current loss date\n\n       This prevents the current claim from being counted.\n       ===================================================== */\n\n    bh.local.priorClaimsSql = `\n        SELECT\n            COUNT(*) AS prior_claims_12m\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_date_time >=\n              ($2::timestamp - INTERVAL '12 months')\n          AND loss_date_time < $2::timestamp;\n    `;\n\n\n    bh.local.priorClaimsSqlParams = [\n\n        policyId,\n\n        lossDateTime\n\n    ];\n\n\n    /* =====================================================\n       LOGGING\n       ===================================================== */\n\n    console.log(\n        \"========== DUPLICATE CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Loss Type:\",\n        lossType\n    );\n\n    console.log(\n        \"Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Estimated Amount:\",\n        estimatedLossAmount\n    );\n\n    console.log(\n        \"Duplicate SQL:\",\n        bh.local.duplicateClaimSql\n    );\n\n    console.log(\n        \"======================================\"\n    );\n\n\n    console.log(\n        \"========== PRIOR CLAIMS CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Current Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Prior Claims SQL:\",\n        bh.local.priorClaimsSql\n    );\n\n    console.log(\n        \"Prior Claims SQL Params:\",\n        bh.local.priorClaimsSqlParams\n    );\n\n    console.log(\n        \"========================================\"\n    );\n}",
+        "functionName": "duplicateAndPriorClaimCheck",
         "category": "Function",
         "x": 1165,
-        "y": 100,
+        "y": 220,
         "wires": [
             [
                 "sd_kOWjcCRlGA64y0B0"
@@ -1973,11 +1964,11 @@
         "dbType": "postgres",
         "functionName": "duplicateClaimSql",
         "category": "Storage",
-        "x": 1105,
-        "y": 280,
+        "x": 1325,
+        "y": 220,
         "wires": [
             [
-                "sd_gUSvVx8xFnOi4wYH"
+                "sd_T9u31GzeVJGBw5oO"
             ]
         ],
         "__n_excludedFromValidation__": {},
@@ -1992,10 +1983,10 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "DuplicateClaimResponse",
-        "script": "/* =========================================================\n   DUPLICATE CLAIM RESPONSE\n   ========================================================= */\n\nconst result =\n    bh.local.duplicateClaimResult || [];\n\n\nconsole.log(\n    \"Duplicate query result:\",\n    JSON.stringify(\n        result,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   NO DUPLICATE\n   ========================================================= */\n\nif (\n    !Array.isArray(result) ||\n    result.length === 0\n) {\n\n    bh.local.duplicateClaimFlag =\n        false;\n\n    bh.local.duplicateClaimId =\n        null;\n\n    bh.local.duplicateClaimNumber =\n        null;\n\n}\nelse {\n\n    const duplicate =\n        result[0];\n\n\n    bh.local.duplicateClaimFlag =\n        true;\n\n    bh.local.duplicateClaimId =\n        duplicate.id;\n\n    bh.local.duplicateClaimNumber =\n        duplicate.claim_number;\n\n}\n\n\nconsole.log(\n    \"duplicateClaimFlag:\",\n    bh.local.duplicateClaimFlag\n);\n\nconsole.log(\n    \"duplicateClaimId:\",\n    bh.local.duplicateClaimId\n);\n\nconsole.log(\n    \"duplicateClaimNumber:\",\n    bh.local.duplicateClaimNumber\n);",
+        "script": "/* =========================================================\n   DUPLICATE CLAIM + PRIOR CLAIMS RESPONSE\n   ========================================================= */\n\n\n/* =========================================================\n   DUPLICATE CLAIM RESPONSE\n   ========================================================= */\n\nconst duplicateResult =\n    bh.local.duplicateClaimResult || [];\n\n\nconsole.log(\n    \"Duplicate query result:\",\n    JSON.stringify(\n        duplicateResult,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   DEFAULT DUPLICATE VALUES\n   ========================================================= */\n\nbh.local.duplicateClaimFlag =\n    false;\n\nbh.local.duplicateClaimId =\n    null;\n\nbh.local.duplicateClaimNumber =\n    null;\n\n\n/* =========================================================\n   PROCESS DUPLICATE RESULT\n   ========================================================= */\n\nif (\n    Array.isArray(duplicateResult) &&\n    duplicateResult.length > 0\n) {\n\n    const duplicate =\n        duplicateResult[0];\n\n\n    bh.local.duplicateClaimFlag =\n        true;\n\n    bh.local.duplicateClaimId =\n        duplicate.id;\n\n    bh.local.duplicateClaimNumber =\n        duplicate.claim_number;\n}\n\n\n/* =========================================================\n   PRIOR CLAIMS 12 MONTH RESPONSE\n   ========================================================= */\n\nconst priorClaimsResult =\n    bh.local.priorClaimsResult || [];\n\n\nconsole.log(\n    \"Prior claims query result:\",\n    JSON.stringify(\n        priorClaimsResult,\n        null,\n        2\n    )\n);\n\n\n/* =========================================================\n   DEFAULT PRIOR CLAIM VALUES\n   ========================================================= */\n\nbh.local.priorClaims12m =\n    0;\n\nbh.local.priorClaimsValid =\n    true;\n\n\n/* =========================================================\n   GET PRIOR CLAIM COUNT\n   ========================================================= */\n\nif (\n    Array.isArray(priorClaimsResult) &&\n    priorClaimsResult.length > 0\n) {\n\n    const priorClaims =\n        priorClaimsResult[0];\n\n\n    bh.local.priorClaims12m =\n        Number(\n            priorClaims.prior_claims_12m || 0\n        );\n}\n\n\n/* =========================================================\n   PRIOR CLAIM VALIDATION\n   =========================================================\n\n   <= 1  → VALID\n   > 1   → INVALID\n   ========================================================= */\n\nbh.local.priorClaimsValid =\n    bh.local.priorClaims12m <= 1;\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== CLAIM HISTORY RESULT ==========\"\n);\n\nconsole.log(\n    \"Duplicate Claim Flag:\",\n    bh.local.duplicateClaimFlag\n);\n\nconsole.log(\n    \"Duplicate Claim ID:\",\n    bh.local.duplicateClaimId\n);\n\nconsole.log(\n    \"Duplicate Claim Number:\",\n    bh.local.duplicateClaimNumber\n);\n\nconsole.log(\n    \"Prior Claims 12M:\",\n    bh.local.priorClaims12m\n);\n\nconsole.log(\n    \"Prior Claims Valid:\",\n    bh.local.priorClaimsValid\n);\n\nconsole.log(\n    \"==========================================\"\n);",
         "functionName": "duplicateClaimResponse",
         "category": "Function",
-        "x": 1245,
+        "x": 1625,
         "y": 220,
         "wires": [
             [
@@ -2678,6 +2669,44 @@
         "wires": [
             [
                 "sd_cy1Fe1Hc8wDpU15I"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_T9u31GzeVJGBw5oO",
+        "type": "ExecuteSql",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "server",
+        "nodeType": "flow",
+        "name": "priorClaimSql",
+        "databaseConfig": "sd_OhBYahJpKIdIWsaK",
+        "resultMap": {
+            "type": "bh.local",
+            "value": "priorClaims12m"
+        },
+        "multipleQuery": "",
+        "singleQuery": {
+            "type": "bh.local",
+            "value": "priorClaimsSql"
+        },
+        "inputs": 1,
+        "outputs": 1,
+        "paramMappingObj": {
+            "type": "bh.local",
+            "value": "priorClaimsSqlParams"
+        },
+        "dbType": "postgres",
+        "functionName": "priorClaimSql",
+        "category": "Storage",
+        "x": 1485,
+        "y": 220,
+        "wires": [
+            [
+                "sd_gUSvVx8xFnOi4wYH"
             ]
         ],
         "__n_excludedFromValidation__": {},
