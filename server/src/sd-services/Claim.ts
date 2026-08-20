@@ -1264,7 +1264,7 @@ export class Claim {
         bh.local.policyStatus = policy.policy_status;
       }
       this.tracerService.sendData(spanInst, bh);
-      bh = await this.duplicateAndPriorClaimCheck(bh, parentSpanInst);
+      bh = await this.getFnolMasterDataCallServicePeril(bh, parentSpanInst);
       //appendnew_next_policyResultResponse
       return bh;
     } catch (e) {
@@ -1274,6 +1274,33 @@ export class Claim {
         'sd_haRvpxJmSHUqWXH4',
         spanInst,
         'policyResultResponse'
+      );
+    }
+  }
+
+  async getFnolMasterDataCallServicePeril(bh, parentSpanInst) {
+    const spanInst = this.tracerService.createSpan(
+      'getFnolMasterDataCallServicePeril',
+      parentSpanInst
+    );
+    try {
+      let outputVariables = await this.getFnolMasterDataInternal(
+        spanInst,
+        undefined
+      );
+      bh.local.masterDataResponse = outputVariables.input.masterDataResponse;
+
+      this.tracerService.sendData(spanInst, bh);
+      bh = await this.duplicateAndPriorClaimCheck(bh, parentSpanInst);
+      //appendnew_next_getFnolMasterDataCallServicePeril
+      return bh;
+    } catch (e) {
+      return await this.errorHandler(
+        bh,
+        e,
+        'sd_y1xiFoTaGLkYq3hN',
+        spanInst,
+        'getFnolMasterDataCallServicePeril'
       );
     }
   }
@@ -1318,6 +1345,8 @@ export class Claim {
       const lossType = String(bh.local.lossType || '')
         .trim()
         .toUpperCase();
+      console.log('Policy=====', bh.local.policy);
+      console.log('covered_perils=====', bh.local.policy.covered_perils);
       let coveredPerils = bh.local.policy.covered_perils || [];
       if (typeof coveredPerils === 'string') {
         try {
@@ -1344,14 +1373,23 @@ export class Claim {
       /* =========================================================
    UI LOSS TYPE → POLICY PERIL
    ========================================================= */
+      console.log('bh.local.masterDataResponse', bh.local.masterDataResponse);
 
-      const perilMap = {
-        GLASS_DAMAGE: 'GLASS',
+      const lossTypesMasterData = bh.local.masterDataResponse?.lossTypes || [];
 
-        COLLISION: 'COLLISION',
+      const perilMap = {};
 
-        THEFT: 'THEFT',
-      };
+      lossTypesMasterData.forEach((item) => {
+        const lossTypeCode = String(item['Loss Type Code'] || '')
+          .trim()
+          .toUpperCase();
+
+        if (lossTypeCode) {
+          perilMap[lossTypeCode] = lossTypeCode;
+        }
+      });
+
+      console.log('Dynamic Peril Map:', perilMap);
 
       /* =========================================================
    FIND REQUIRED POLICY PERIL

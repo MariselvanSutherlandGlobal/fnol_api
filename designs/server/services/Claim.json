@@ -981,7 +981,6 @@
             "send": "bh.local.masterResponse"
         },
         "dataModelIsArray": false,
-        "cookies": [],
         "inputs": 1,
         "outputs": 0,
         "erd": "",
@@ -1193,7 +1192,7 @@
         "y": 220,
         "wires": [
             [
-                "sd_SyCb7KeFfsHWri2N"
+                "sd_y1xiFoTaGLkYq3hN"
             ]
         ],
         "__n_excludedFromValidation__": {},
@@ -1921,7 +1920,7 @@
         "viewType": "common",
         "nodeType": "flow",
         "name": "DuplicateAndPriorClaimCheck",
-        "script": "/* =========================================================\n   DUPLICATE CLAIM CHECK + PRIOR CLAIMS COUNT\n   ========================================================= */\n\n/*\n   DUPLICATE DEFINITION FOR POC:\n\n   Same policy\n   + same loss type\n   + same loss date\n   + similar claim amount\n\n   PRIOR CLAIMS DEFINITION FOR POC:\n\n   Same policy\n   + claims in the previous 12 months\n   + claim loss date BEFORE current claim loss date\n\n   The current claim is checked BEFORE insertion.\n*/\n\n\n/* =========================================================\n   INPUTS\n   ========================================================= */\n\nconst policyId =\n    Number(\n        bh.local.verifiedPolicyId ||\n        bh.local.policyId ||\n        0\n    );\n\nconst lossDateTime =\n    bh.local.lossDateTime;\n\n    const lossType =\n    String(\n        bh.local.lossType || \"\"\n    )\n    .trim()\n    .toUpperCase();\nlet coveredPerils =\n    bh.local.policy.covered_perils || [];\n    if (typeof coveredPerils === \"string\") {\n\n    try {\n\n        coveredPerils =\n            JSON.parse(\n                coveredPerils\n            );\n\n    }\n    catch (error) {\n\n        console.log(\n            \"Unable to parse policy covered_perils:\",\n            coveredPerils\n        );\n\n        coveredPerils = [];\n    }\n}\n\n\nif (!Array.isArray(coveredPerils)) {\n\n    coveredPerils = [];\n\n}\n\n\n/* =========================================================\n   NORMALIZE POLICY PERILS\n   ========================================================= */\n\ncoveredPerils =\n    coveredPerils.map(\n        peril =>\n            String(peril)\n                .trim()\n                .toUpperCase()\n    );\n\n\n/* =========================================================\n   UI LOSS TYPE → POLICY PERIL\n   ========================================================= */\n\nconst perilMap = {\n\n    GLASS_DAMAGE: \"GLASS\",\n\n    COLLISION: \"COLLISION\",\n\n    THEFT: \"THEFT\"\n\n};\n\n\n/* =========================================================\n   FIND REQUIRED POLICY PERIL\n   ========================================================= */\n\nconst requiredPeril =\n    perilMap[lossType] ||\n    lossType;\n\n\n/* =========================================================\n   VALIDATE COVERAGE\n   ========================================================= */\n\nbh.local.perilCovered =\n    coveredPerils.includes(\n        requiredPeril\n    );\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== PERIL COVERAGE ==========\"\n);\n\nconsole.log(\n    \"UI Loss Type:\",\n    lossType\n);\n\nconsole.log(\n    \"Required Policy Peril:\",\n    requiredPeril\n);\n\nconsole.log(\n    \"Policy Covered Perils:\",\n    coveredPerils\n);\n\nconsole.log(\n    \"Peril Covered:\",\n    bh.local.perilCovered\n);\n\nconsole.log(\n    \"====================================\"\n);\nconst estimatedLossAmount =\n    Number(\n        bh.local.estimatedLossAmount || 0\n    );\n\n\n/* =========================================================\n   DEFAULT VALUES\n   ========================================================= */\n\nbh.local.duplicateClaimFlag = false;\n\nbh.local.duplicateClaimId = null;\n\nbh.local.duplicateClaimNumber = null;\n\n\n/*\n   IMPORTANT:\n   Default prior claim count is 0.\n*/\nbh.local.priorClaims12m = 0;\n\n\n/* =========================================================\n   VALIDATION\n   ========================================================= */\n\nif (\n    !policyId ||\n    !lossDateTime ||\n    !lossType\n) {\n\n    console.log(\n        \"Duplicate check skipped - required values missing\"\n    );\n\n}\nelse {\n\n    /* =====================================================\n       DUPLICATE CLAIM SQL\n\n       Same:\n       - policy\n       - loss type\n       - loss date\n       - approximately same amount\n\n       Same calendar date is used instead of exact timestamp.\n       ===================================================== */\n\n    bh.local.duplicateClaimSql = `\n        SELECT\n            id,\n            claim_number\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_type = $2\n          AND DATE(loss_date_time) = DATE($3::timestamp)\n          AND ABS(\n                COALESCE(estimated_loss_amount, 0)\n                - $4\n              ) <= 1\n        ORDER BY id DESC\n        LIMIT 1;\n    `;\n\n\n    bh.local.duplicateClaimSqlParams = [\n\n        policyId,\n\n        lossType,\n\n        lossDateTime,\n\n        estimatedLossAmount\n\n    ];\n\n\n    /* =====================================================\n       PRIOR CLAIMS COUNT - PREVIOUS 12 MONTHS\n\n       Count existing claims for the same policy where:\n\n       loss_date_time >= current loss date - 12 months\n\n       AND\n\n       loss_date_time < current loss date\n\n       This prevents the current claim from being counted.\n       ===================================================== */\n\n    bh.local.priorClaimsSql = `\n        SELECT\n            COUNT(*) AS prior_claims_12m\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_date_time >=\n              ($2::timestamp - INTERVAL '12 months')\n          AND loss_date_time < $2::timestamp;\n    `;\n\n\n    bh.local.priorClaimsSqlParams = [\n\n        policyId,\n\n        lossDateTime\n\n    ];\n\n\n    /* =====================================================\n       LOGGING\n       ===================================================== */\n\n    console.log(\n        \"========== DUPLICATE CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Loss Type:\",\n        lossType\n    );\n\n    console.log(\n        \"Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Estimated Amount:\",\n        estimatedLossAmount\n    );\n\n    console.log(\n        \"Duplicate SQL:\",\n        bh.local.duplicateClaimSql\n    );\n\n    console.log(\n        \"======================================\"\n    );\n\n\n    console.log(\n        \"========== PRIOR CLAIMS CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Current Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Prior Claims SQL:\",\n        bh.local.priorClaimsSql\n    );\n\n    console.log(\n        \"Prior Claims SQL Params:\",\n        bh.local.priorClaimsSqlParams\n    );\n\n    console.log(\n        \"========================================\"\n    );\n}",
+        "script": "/* =========================================================\n   DUPLICATE CLAIM CHECK + PRIOR CLAIMS COUNT\n   ========================================================= */\n\n/*\n   DUPLICATE DEFINITION FOR POC:\n\n   Same policy\n   + same loss type\n   + same loss date\n   + similar claim amount\n\n   PRIOR CLAIMS DEFINITION FOR POC:\n\n   Same policy\n   + claims in the previous 12 months\n   + claim loss date BEFORE current claim loss date\n\n   The current claim is checked BEFORE insertion.\n*/\n\n\n/* =========================================================\n   INPUTS\n   ========================================================= */\n\nconst policyId =\n    Number(\n        bh.local.verifiedPolicyId ||\n        bh.local.policyId ||\n        0\n    );\n\nconst lossDateTime =\n    bh.local.lossDateTime;\n\n    const lossType =\n    String(\n        bh.local.lossType || \"\"\n    )\n    .trim()\n    .toUpperCase();\n    console.log(\"Policy=====\", bh.local.policy);\n    console.log(\"covered_perils=====\", bh.local.policy.covered_perils);\nlet coveredPerils =\n    bh.local.policy.covered_perils || [];\n    if (typeof coveredPerils === \"string\") {\n\n    try {\n\n        coveredPerils =\n            JSON.parse(\n                coveredPerils\n            );\n\n    }\n    catch (error) {\n\n        console.log(\n            \"Unable to parse policy covered_perils:\",\n            coveredPerils\n        );\n\n        coveredPerils = [];\n    }\n}\n\n\nif (!Array.isArray(coveredPerils)) {\n\n    coveredPerils = [];\n\n}\n\n\n/* =========================================================\n   NORMALIZE POLICY PERILS\n   ========================================================= */\n\ncoveredPerils =\n    coveredPerils.map(\n        peril =>\n            String(peril)\n                .trim()\n                .toUpperCase()\n    );\n\n\n/* =========================================================\n   UI LOSS TYPE → POLICY PERIL\n   ========================================================= */\nconsole.log('bh.local.masterDataResponse', bh.local.masterDataResponse);\n\nconst lossTypesMasterData =\n    bh.local.masterDataResponse?.lossTypes || [];\n\n\nconst perilMap = {};\n\nlossTypesMasterData.forEach(\n    item => {\n\n        const lossTypeCode =\n            String(\n                item[\"Loss Type Code\"] || \"\"\n            )\n            .trim()\n            .toUpperCase();\n\n        if (lossTypeCode) {\n\n            perilMap[lossTypeCode] =\n                lossTypeCode;\n\n        }\n\n    }\n);\n\n\nconsole.log(\n    \"Dynamic Peril Map:\",\n    perilMap\n);\n\n\n/* =========================================================\n   FIND REQUIRED POLICY PERIL\n   ========================================================= */\n\nconst requiredPeril =\n    perilMap[lossType] ||\n    lossType;\n\n\n/* =========================================================\n   VALIDATE COVERAGE\n   ========================================================= */\n\nbh.local.perilCovered =\n    coveredPerils.includes(\n        requiredPeril\n    );\n\n\n/* =========================================================\n   DEBUG\n   ========================================================= */\n\nconsole.log(\n    \"========== PERIL COVERAGE ==========\"\n);\n\nconsole.log(\n    \"UI Loss Type:\",\n    lossType\n);\n\nconsole.log(\n    \"Required Policy Peril:\",\n    requiredPeril\n);\n\nconsole.log(\n    \"Policy Covered Perils:\",\n    coveredPerils\n);\n\nconsole.log(\n    \"Peril Covered:\",\n    bh.local.perilCovered\n);\n\nconsole.log(\n    \"====================================\"\n);\nconst estimatedLossAmount =\n    Number(\n        bh.local.estimatedLossAmount || 0\n    );\n\n\n/* =========================================================\n   DEFAULT VALUES\n   ========================================================= */\n\nbh.local.duplicateClaimFlag = false;\n\nbh.local.duplicateClaimId = null;\n\nbh.local.duplicateClaimNumber = null;\n\n\n/*\n   IMPORTANT:\n   Default prior claim count is 0.\n*/\nbh.local.priorClaims12m = 0;\n\n\n/* =========================================================\n   VALIDATION\n   ========================================================= */\n\nif (\n    !policyId ||\n    !lossDateTime ||\n    !lossType\n) {\n\n    console.log(\n        \"Duplicate check skipped - required values missing\"\n    );\n\n}\nelse {\n\n    /* =====================================================\n       DUPLICATE CLAIM SQL\n\n       Same:\n       - policy\n       - loss type\n       - loss date\n       - approximately same amount\n\n       Same calendar date is used instead of exact timestamp.\n       ===================================================== */\n\n    bh.local.duplicateClaimSql = `\n        SELECT\n            id,\n            claim_number\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_type = $2\n          AND DATE(loss_date_time) = DATE($3::timestamp)\n          AND ABS(\n                COALESCE(estimated_loss_amount, 0)\n                - $4\n              ) <= 1\n        ORDER BY id DESC\n        LIMIT 1;\n    `;\n\n\n    bh.local.duplicateClaimSqlParams = [\n\n        policyId,\n\n        lossType,\n\n        lossDateTime,\n\n        estimatedLossAmount\n\n    ];\n\n\n    /* =====================================================\n       PRIOR CLAIMS COUNT - PREVIOUS 12 MONTHS\n\n       Count existing claims for the same policy where:\n\n       loss_date_time >= current loss date - 12 months\n\n       AND\n\n       loss_date_time < current loss date\n\n       This prevents the current claim from being counted.\n       ===================================================== */\n\n    bh.local.priorClaimsSql = `\n        SELECT\n            COUNT(*) AS prior_claims_12m\n        FROM claims\n        WHERE policy_id = $1\n          AND loss_date_time >=\n              ($2::timestamp - INTERVAL '12 months')\n          AND loss_date_time < $2::timestamp;\n    `;\n\n\n    bh.local.priorClaimsSqlParams = [\n\n        policyId,\n\n        lossDateTime\n\n    ];\n\n\n    /* =====================================================\n       LOGGING\n       ===================================================== */\n\n    console.log(\n        \"========== DUPLICATE CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Loss Type:\",\n        lossType\n    );\n\n    console.log(\n        \"Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Estimated Amount:\",\n        estimatedLossAmount\n    );\n\n    console.log(\n        \"Duplicate SQL:\",\n        bh.local.duplicateClaimSql\n    );\n\n    console.log(\n        \"======================================\"\n    );\n\n\n    console.log(\n        \"========== PRIOR CLAIMS CHECK ==========\"\n    );\n\n    console.log(\n        \"Policy ID:\",\n        policyId\n    );\n\n    console.log(\n        \"Current Loss Date:\",\n        lossDateTime\n    );\n\n    console.log(\n        \"Prior Claims SQL:\",\n        bh.local.priorClaimsSql\n    );\n\n    console.log(\n        \"Prior Claims SQL Params:\",\n        bh.local.priorClaimsSqlParams\n    );\n\n    console.log(\n        \"========================================\"\n    );\n}",
         "functionName": "duplicateAndPriorClaimCheck",
         "category": "Function",
         "x": 1165,
@@ -2696,6 +2695,68 @@
         "wires": [
             [
                 "sd_gUSvVx8xFnOi4wYH"
+            ]
+        ],
+        "__n_excludedFromValidation__": {},
+        "generateNext": false,
+        "serviceName": "Claim",
+        "generated": true
+    },
+    {
+        "id": "sd_y1xiFoTaGLkYq3hN",
+        "type": "CallService",
+        "z": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+        "viewType": "common",
+        "nodeType": "flow",
+        "name": "getFnolMasterDataCallServicePeril",
+        "outputs": 1,
+        "isValidNode": true,
+        "noerr": 0,
+        "service": {
+            "id": "SSD_SERVICE_ID_sd_vFzTkEYpoBQQlG0l",
+            "type": "tab",
+            "createdDate": "2026-08-12T09:18:30.724Z",
+            "label": "Claim",
+            "disabled": false,
+            "info": "",
+            "functionSeq": 0
+        },
+        "flow": {
+            "flowId": "sd_TwPyl5c2xuiGMbUf",
+            "flowName": "getFnolMasterDataInternal"
+        },
+        "inputVariables": [
+            {
+                "key": "masterDataResponse",
+                "map": true,
+                "valueType": "bh",
+                "value": ""
+            }
+        ],
+        "bhVariables": [],
+        "outputMapping": [
+            {
+                "mapVarType": "input",
+                "key": "masterDataResponse",
+                "valueType": "bh.local",
+                "value": "masterDataResponse",
+                "mapVarName": "masterDataResponse",
+                "localVar": "bh.local.masterDataResponse"
+            }
+        ],
+        "callService": "./Claim",
+        "startName": "getFnolMasterDataInternal",
+        "inputParams": [
+            null
+        ],
+        "accept_bh": false,
+        "functionName": "getFnolMasterDataCallServicePeril",
+        "category": "General",
+        "x": 1085,
+        "y": 120,
+        "wires": [
+            [
+                "sd_SyCb7KeFfsHWri2N"
             ]
         ],
         "__n_excludedFromValidation__": {},
