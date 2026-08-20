@@ -1319,7 +1319,7 @@ export class Claim {
       const lossType = String(bh.local.lossType || '')
         .trim()
         .toUpperCase();
-      let coveredPerils = policy.covered_perils || [];
+      let coveredPerils = bh.local.policy.covered_perils || [];
       if (typeof coveredPerils === 'string') {
         try {
           coveredPerils = JSON.parse(coveredPerils);
